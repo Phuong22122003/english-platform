@@ -1,5 +1,6 @@
 package com.english.dto.response;
 
+import com.english.enums.Level;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class ListeningTopicResponse {
     private String name;
     private String description;
     private String imageUrl;
+    private Level level;
     private LocalDateTime createdAt;
     private List<ListeningResponse> listenings;
     private Page<ListeningTestReponse> tests;

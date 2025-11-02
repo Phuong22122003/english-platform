@@ -1,5 +1,6 @@
 package com.english.dto.response;
 
+import com.english.enums.Level;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,4 +18,5 @@ public class GrammarTopicResponse {
     private String description;
     private String imageUrl;
     private String createdAt;
+    private Level level;
 }

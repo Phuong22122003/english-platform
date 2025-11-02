@@ -1,5 +1,6 @@
 package com.english.dto.response;
 
+import com.english.enums.Level;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -20,5 +21,6 @@ public class VocabTopicResponse {
     private String description;
     private String imageUrl;
     private String createdAt;
+    private Level level;
     List<VocabularyResponse> vocabularies;
 }

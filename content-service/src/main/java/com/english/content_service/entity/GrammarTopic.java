@@ -1,5 +1,6 @@
 package com.english.content_service.entity;
 
+import com.english.enums.Level;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -29,4 +30,6 @@ public class GrammarTopic {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    private Level level;
 }

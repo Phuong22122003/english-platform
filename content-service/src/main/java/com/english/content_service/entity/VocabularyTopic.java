@@ -1,5 +1,6 @@
 package com.english.content_service.entity;
 
+import com.english.enums.Level;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,4 +30,6 @@ public class VocabularyTopic {
 
     @Column(name = "public_id")
     private String publicId;
+
+    private Level level;
 }
