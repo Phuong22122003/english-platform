@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: learning-service
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  datasource:
+    url: jdbc:postgresql://localhost:5434/learningservice
+    username: dbowner
+    password: dbowner
+
+server:
+  port: 8083
+  servlet:
+    context-path: /learning-service
+
+cloudinary:
+  cloud_name: ${CLOUD_NAME:your_cloud_name}
+  api_key: ${API_KEY:add_your_key}
+  api_secret: ${API_SECRET:add_your_key}
+
+app:
+  services:
+    content: ${CONTENT_SERVICE_URL:http://localhost:8082/content-service}
+    agent: ${AGENT_SERVICE_URL:http://localhost:5000/agent-service}
+    user: ${USER_SERVICE_URL:http://localhost:8081/user-service}

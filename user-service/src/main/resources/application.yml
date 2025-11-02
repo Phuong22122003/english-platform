@@ -1,0 +1,29 @@
+spring:
+  flyway:
+      enabled: true
+      locations: classpath:db/migration
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/userservice
+    username: dbowner
+    password: dbowner
+  mail:
+    username: your_email
+    password: your_password
+server:
+    port: 8081
+    servlet:
+        context-path: /user-service
+jwt:
+    signerKey: ${SIGNER_KEY:add_your_key}
+    refreshable-duration: 2764800 # in second
+    valid-duration: 2764800 # in second
+
+springdoc:
+  override-with-generic-response: false
+
+cloudinary:
+  cloud_name: ${CLOUD_NAME:add_your_cloud_name}
+  api_key: ${API_KEY:add_your_key}
+  api_secret: ${API_SECRET:add_your_key}
