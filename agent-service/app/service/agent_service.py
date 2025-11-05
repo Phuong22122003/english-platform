@@ -85,12 +85,14 @@ class AgentService:
         return plan 
         
     async def plan_detail(self, plan:Plan):
+        existTopic = set()
         print("Creating plan details...")
         print("userId:", plan.get("userId", "ko co"))
         client = await MCPClientHolder.get_client()
         for group in plan["planGroups"]: 
             data = topic_service.search(group['name'] + group['description'])
-
+            if (data is None) or (len(data) == 0):
+                continue
             prompt = await client.get_prompt("get_plan_detail_prompt", arguments={"group": group, "plan": plan, "topics": data})
             prompt = prompt.messages[0].content.text
 
@@ -106,9 +108,13 @@ class AgentService:
                     topic_id = item["topicId"]
                     topic = next((t for t in data if t["id"] == topic_id), None)
                     if topic:
+                        if topic_id in existTopic:
+                            continue
                         plan_detail.append({"topicType": topic["topic_type"], "topicId": topic["id"]})
+                        existTopic.add(topic_id)
             if plan_detail:
                 group.setdefault("details", []).extend(plan_detail)
+        print("Final plan:", normalize_datetime_fields(plan))
         await send_callback(normalize_datetime_fields(plan), plan.get("userId", ""))
         return plan
 

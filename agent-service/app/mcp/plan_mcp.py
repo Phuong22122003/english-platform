@@ -99,6 +99,7 @@ def get_plan_detail_prompt(group, plan, topics) -> str:
       {{"topicId": "string", "approved": true/false, "reason": "string"}}
     ]
 
+    Only each topic exist in one group. Not duplicate topic in multiple groups.
     Return ONLY the JSON array. No explanation.
     """
     return prompt

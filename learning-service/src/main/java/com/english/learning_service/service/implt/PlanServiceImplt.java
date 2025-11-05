@@ -30,12 +30,19 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -58,6 +65,9 @@ public class PlanServiceImplt implements PlanService {
     ListeningClient listeningClient;
     VocabularyClient vocabularyClient;
     GrammarClient grammarClient;
+    @Value("${app.services.agent}")
+    @NonFinal
+    private String agentUrl;
 
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
     @Override
@@ -117,7 +127,7 @@ public class PlanServiceImplt implements PlanService {
         emitter.onError((e) -> emitters.remove(userId));
         emitters.put(userId, emitter);
         userInfoRequest.setRecentExamHistory(examHistories);
-        agentClient.generatePlan(userInfoRequest);
+        callToAgent(userInfoRequest);
 
         return emitter;
     }
@@ -147,6 +157,7 @@ public class PlanServiceImplt implements PlanService {
 
         // 👉 B1: Gom ID theo loại
         for (var group : planRequest.getPlanGroups()) {
+            if (group == null || group.getDetails() == null) continue;
             for (var detail : group.getDetails()) {
                 switch (detail.getTopicType()) {
                     case VOCABULARY -> vocabIds.add(detail.getTopicId());
@@ -375,7 +386,7 @@ public class PlanServiceImplt implements PlanService {
             group.setPlan(plan);
             group = planGroupRepository.save(group);
 
-            List<PlanDetail> details = planMapper.toPlanDetails(g.getDetails());
+            List<PlanDetail> details = planMapper.toPlanDetails(g.getPlanDetails());
             for (PlanDetail d : details) {
                 d.setPlanGroup(group);
             }
@@ -448,4 +459,18 @@ public class PlanServiceImplt implements PlanService {
         return planResponse;
     }
 
+    @Async
+    public void callToAgent(UserInfoRequest request) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<UserInfoRequest> entity = new HttpEntity<>(request, headers);
+            restTemplate.postForEntity(agentUrl + "/agent/plan", entity, Void.class);
+
+            log.info("✅ Async call to agent-service sent successfully for user {}", request.getUserId());
+        } catch (Exception ex) {
+            log.error("❌ Failed to call AI agent: {}", ex.getMessage());
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package com.english.user_service.controller;
 
+import com.english.user_service.dto.request.UserProfileUpdateRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,11 @@ public class UserController {
     @GetMapping("/profile")
     public ResponseEntity<UserResponse> getProfile(){
         return ResponseEntity.ok().body(userService.getProfile());
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<UserResponse> updateProfile(@RequestBody UserProfileUpdateRequest request) {
+        return  ResponseEntity.ok().body(userService.updateUserProfile(request));
     }
 
     @PostMapping("/avatar")

@@ -18,4 +18,5 @@ public class UserProfileUpdateRequest {
     Integer target; // target eg 550
     StudyTime studyTime; // morning, afternoon, evening, night
     String level; // beginner, intermediate, advanced
+    String fullname;
 }
