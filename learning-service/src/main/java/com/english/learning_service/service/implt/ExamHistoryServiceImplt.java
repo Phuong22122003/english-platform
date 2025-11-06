@@ -109,14 +109,15 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
             }
         }
         if(!listeningIds.isEmpty()){
-            List<ListeningTestReponse> listeningTestReponses = listeningClient.getTestsByIds(listeningIds);
-            for(var listening: listeningTestReponses){
+            List<ListeningTestReponse> listeningTestResponses = listeningClient.getTestsByIds(listeningIds);
+            for(var listening: listeningTestResponses){
                 idToTest.put(listening.getId(),listening);
             }
         }
         List<ExamHistoryResponse> examHistoryResponses = examHistoryMapper.toExamHistoryResponses(histories.getContent());
         for(var h: examHistoryResponses){
             Object test = idToTest.get(h.getTestId());
+            if(test==null) continue;//topic is deleted
             if(h.getTestType().equals(ItemTypeEnum.VOCABULARY)){
                 var vocab = (VocabularyTestResponse) test;
                 h.setDuration(vocab.getDuration());
