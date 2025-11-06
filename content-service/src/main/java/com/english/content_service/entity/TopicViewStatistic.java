@@ -18,10 +18,10 @@ import java.util.UUID;
 public class TopicViewStatistic {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
     @Column(name = "topic_id", nullable = false)
-    private UUID topicId;
+    private String topicId;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)

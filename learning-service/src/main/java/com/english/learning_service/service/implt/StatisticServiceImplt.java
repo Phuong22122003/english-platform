@@ -2,6 +2,8 @@ package com.english.learning_service.service.implt;
 
 import com.english.dto.response.StatisticResponse;
 import com.english.enums.TimeRange;
+import com.english.enums.TopicType;
+import com.english.learning_service.dto.response.UserScore;
 import com.english.learning_service.entity.ExamHistory;
 import com.english.learning_service.repository.ExamHistoryRepository;
 import com.english.learning_service.service.StatisticService;
@@ -81,4 +83,85 @@ public class StatisticServiceImplt implements StatisticService {
 
         return response;
     }
+
+    @Override
+    public UserScore getUserScores(TimeRange timeRange, TopicType topicType) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate;
+        LocalDateTime endDate = now;
+
+        // 1️⃣ Xác định khoảng thời gian
+        switch (timeRange) {
+            case TODAY -> startDate = now.toLocalDate().atStartOfDay();
+            case ONE_WEEK -> startDate = now.minusWeeks(1).toLocalDate().atStartOfDay();
+            case ONE_MONTH -> startDate = now.minusMonths(1).toLocalDate().atStartOfDay();
+            case TWELVE_MONTHS, ALL -> startDate = now.minusYears(1).toLocalDate().atStartOfDay();
+            default -> throw new IllegalArgumentException("Invalid time range: " + timeRange);
+        }
+
+        // 2️⃣ Lấy dữ liệu trong khoảng thời gian đó
+        List<ExamHistory> examHistories =
+                examHistoryRepository.findByTakenAtBetween(startDate, endDate);
+
+        // 3️⃣ Nếu có lọc theo topicType
+        if (topicType != null) {
+            examHistories = examHistories.stream()
+                    .filter(e -> e.getTestType().name().equalsIgnoreCase(topicType.name()))
+                    .collect(Collectors.toList());
+        }
+
+        // 4️⃣ Nhóm dữ liệu và tính trung bình điểm
+        Map<String, Float> groupedScores;
+        DateTimeFormatter formatter;
+
+        switch (timeRange) {
+            case TODAY -> { // nhóm theo giờ
+                formatter = DateTimeFormatter.ofPattern("HH:00");
+                groupedScores = examHistories.stream()
+                        .collect(Collectors.groupingBy(
+                                e -> e.getTakenAt().format(formatter),
+                                TreeMap::new,
+                                Collectors.averagingInt(ExamHistory::getScore)
+                        ))
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().floatValue(), (a,b)->a, TreeMap::new));
+            }
+
+            case ONE_WEEK, ONE_MONTH -> { // nhóm theo ngày
+                formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                groupedScores = examHistories.stream()
+                        .collect(Collectors.groupingBy(
+                                e -> e.getTakenAt().toLocalDate().format(formatter),
+                                TreeMap::new,
+                                Collectors.averagingInt(ExamHistory::getScore)
+                        ))
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().floatValue(), (a,b)->a, TreeMap::new));
+            }
+
+            case TWELVE_MONTHS, ALL -> { // nhóm theo tháng
+                formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+                groupedScores = examHistories.stream()
+                        .collect(Collectors.groupingBy(
+                                e -> YearMonth.from(e.getTakenAt()).format(formatter),
+                                TreeMap::new,
+                                Collectors.averagingInt(ExamHistory::getScore)
+                        ))
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().floatValue(), (a,b)->a, TreeMap::new));
+            }
+
+            default -> throw new IllegalArgumentException("Invalid time range: " + timeRange);
+        }
+
+        // 5️⃣ Tạo DTO trả về
+        UserScore response = new UserScore();
+        response.setScores(groupedScores);
+
+        return response;
+    }
+
 }

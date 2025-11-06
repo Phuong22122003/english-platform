@@ -1,6 +1,7 @@
 package com.english.content_service.repository;
 
 import com.english.content_service.entity.TopicViewStatistic;
+import com.english.enums.TopicType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,4 +21,11 @@ public interface TopicViewStatisticRepository extends JpaRepository<TopicViewSta
         """)
     List<TopicViewSummary> findTopTopics(Pageable pageable);
     List<TopicViewStatistic> findByViewDateBetween(LocalDate startDate, LocalDate endDate);
+
+    Optional<TopicViewStatistic> findByTopicIdAndTopicTypeAndViewDateAndViewHour(
+            String topicId,
+            TopicType topicType,
+            LocalDate viewDate,
+            int viewHour
+    );
 }

@@ -10,8 +10,10 @@ import com.english.content_service.dto.request.VocabularyTestQuestionRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
 import com.english.content_service.httpclient.AgentClient;
 import com.english.content_service.service.AgentService;
+import com.english.content_service.service.TopicViewStatisticService;
 import com.english.dto.response.*;
 import com.english.enums.RequestType;
+import com.english.enums.TopicType;
 import com.english.exception.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +50,7 @@ public class VocabularyServiceImpl implements VocabularyService {
     VocabularyMapper vocabularyMapper;
     FileService fileService;
     AgentService agentService;
+    TopicViewStatisticService topicViewStatisticService;
 
     @Override
     public Page<VocabTopicResponse> search(String query, int page, int limit) {
@@ -75,9 +78,11 @@ public class VocabularyServiceImpl implements VocabularyService {
         return new PageImpl<>(topicResponses, PageRequest.of(page, size), topics.getTotalElements());
     }
     @Override
+    @Transactional
     public GetVocabularyTopicResponse getVocabulariesByTopicId(String topicId) {
         List<Vocabulary> vocabularies = vocabularyRepository.findByTopicId(topicId);
         Optional<VocabularyTopic> topicOpt = vocabularyTopicRepository.findById(topicId);
+        topicViewStatisticService.addTopic(topicId, TopicType.VOCABULARY);
         return topicOpt.map(vocabularyTopic -> GetVocabularyTopicResponse.builder()
                 .name(vocabularyTopic.getName())
                 .topicId(vocabularyTopic.getId())

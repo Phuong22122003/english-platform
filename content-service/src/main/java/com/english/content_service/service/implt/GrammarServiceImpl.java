@@ -13,8 +13,10 @@ import com.english.content_service.repository.GrammarTestQuestionRepository;
 import com.english.content_service.repository.GrammarTestRepository;
 import com.english.content_service.repository.GrammarTopicRepository;
 import com.english.content_service.service.AgentService;
+import com.english.content_service.service.TopicViewStatisticService;
 import com.english.dto.response.*;
 import com.english.enums.RequestType;
+import com.english.enums.TopicType;
 import com.english.exception.NotFoundException;
 import com.english.service.FileService;
 import jakarta.transaction.Transactional;
@@ -40,6 +42,7 @@ public class GrammarServiceImpl implements GrammarService {
     GrammarTestRepository grammarTestRepository;
     GrammarTestQuestionRepository grammarTestQuestionRepository;
     GrammarMapper grammarMapper;
+    TopicViewStatisticService topicViewStatisticService;
     FileService fileService;
     AgentService agentService;
 
@@ -69,10 +72,11 @@ public class GrammarServiceImpl implements GrammarService {
     }
 
     @Override
+    @Transactional
     public GetGrammarTopicResponse getGrammarsByTopicId(String topicId) {
         List<Grammar> grammars = grammarRepository.findByTopicId(topicId);
         Optional<GrammarTopic> topicOpt = grammarTopicRepository.findById(topicId);
-
+        topicViewStatisticService.addTopic(topicId, TopicType.GRAMMAR);
         return topicOpt.map(topic -> GetGrammarTopicResponse.builder()
                         .topicId(topic.getId())
                         .name(topic.getName())

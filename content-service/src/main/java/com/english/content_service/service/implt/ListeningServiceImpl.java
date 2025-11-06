@@ -5,6 +5,7 @@ import com.english.content_service.dto.request.ListeningTestRequest;
 import com.english.content_service.dto.request.ListeningTopicRequest;
 import com.english.content_service.entity.ListeningTestQuestion;
 import com.english.content_service.service.AgentService;
+import com.english.content_service.service.TopicViewStatisticService;
 import com.english.dto.response.FileResponse;
 import com.english.dto.response.ListeningResponse;
 import com.english.dto.response.ListeningTestReponse;
@@ -18,6 +19,7 @@ import com.english.content_service.repository.ListeningTestQuestionRepository;
 import com.english.content_service.repository.ListeningTestRepository;
 import com.english.content_service.repository.ListeningTopicRepository;
 import com.english.enums.RequestType;
+import com.english.enums.TopicType;
 import com.english.exception.NotFoundException;
 import com.english.service.FileService;
 import jakarta.transaction.Transactional;
@@ -49,6 +51,7 @@ public class ListeningServiceImpl implements ListeningService {
     ListeningTestRepository listeningTestRepository;
     ListeningTestQuestionRepository listeningTestQuestionRepository;
     AgentService agentService;
+    TopicViewStatisticService topicViewStatisticService;
 
     @Override
     public Page<ListeningTopicResponse> search(String query, int page, int limit) {
@@ -130,12 +133,14 @@ public class ListeningServiceImpl implements ListeningService {
     }
 
     @Override
+    @Transactional
     public ListeningTopicResponse getListeningByTopic(String topicId) {
         var topic = listeningTopicRepository.findById(topicId).orElseThrow(()->new RuntimeException("Topic Not found"));
         List<Listening> listeningList = listeningRepository.findByTopicId(topicId);
         var listeningListResponses = listeningMapper.toListeningResponse(listeningList);
         var topicReponse = listeningMapper.toTopicResponse(topic);
         topicReponse.setListenings(listeningListResponses);
+        topicViewStatisticService.addTopic(topicId, TopicType.LISTENING);
         return topicReponse;
     }
 
