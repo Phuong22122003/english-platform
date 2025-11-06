@@ -7,6 +7,7 @@ import com.english.learning_service.dto.response.UserScore;
 import com.english.learning_service.entity.ExamHistory;
 import com.english.learning_service.repository.ExamHistoryRepository;
 import com.english.learning_service.service.StatisticService;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+@Service
 public class StatisticServiceImplt implements StatisticService {
     ExamHistoryRepository examHistoryRepository;
 
