@@ -6,6 +6,6 @@ router = APIRouter(prefix='/agent')
 
 @router.post("/plan")
 async def create_plan(user_info: dict):
-    print("Creating plan...")
+    print("Creating plan...", user_info)
     await agent_service.invoke({"user_info": user_info})
     return JSONResponse({"message": "Plan created successfully"})
