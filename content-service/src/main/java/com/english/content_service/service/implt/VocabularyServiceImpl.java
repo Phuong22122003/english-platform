@@ -9,6 +9,7 @@ import com.english.content_service.dto.request.VocabTopicRequest;
 import com.english.content_service.dto.request.VocabularyRequest;
 import com.english.content_service.dto.request.VocabularyTestQuestionRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
+import com.english.content_service.entity.Options;
 import com.english.content_service.httpclient.AgentClient;
 import com.english.content_service.service.AgentService;
 import com.english.content_service.service.TopicViewStatisticService;
@@ -224,33 +225,84 @@ public class VocabularyServiceImpl implements VocabularyService {
 
     @Override
     @Transactional
-    public List<VocabularyResponse> addVocabularies(String topicId, List<VocabularyRequest> requests,
-            List<MultipartFile> imageFiles, List<MultipartFile> audioFiles) {
-        VocabularyTopic topic = this.vocabularyTopicRepository.findById(topicId).orElseThrow(()-> new RuntimeException("Topic not found"));
+    public List<VocabularyResponse> addVocabularies(String topicId,
+                                                    List<VocabularyRequest> requests,
+                                                    List<MultipartFile> imageFiles,
+                                                    List<MultipartFile> audioFiles) {
+
+        VocabularyTopic topic = this.vocabularyTopicRepository.findById(topicId)
+                .orElseThrow(() -> new NotFoundException("Topic not found"));
+
         List<Vocabulary> vocabularies = vocabularyMapper.toVocabularies(requests);
-        List<String> publicIds = new ArrayList<>();
-        try{
-            for(int i = 0; i< vocabularies.size();i++){
+
+        // Map filename -> MultipartFile for easy lookup by name from requests
+        Map<String, MultipartFile> imageMap = new HashMap<>();
+        if (imageFiles != null) {
+            for (MultipartFile img : imageFiles) {
+                if (img != null && !img.isEmpty() && img.getOriginalFilename() != null) {
+                    imageMap.put(img.getOriginalFilename(), img);
+                }
+            }
+        }
+
+        Map<String, MultipartFile> audioMap = new HashMap<>();
+        if (audioFiles != null) {
+            for (MultipartFile aud : audioFiles) {
+                if (aud != null && !aud.isEmpty() && aud.getOriginalFilename() != null) {
+                    audioMap.put(aud.getOriginalFilename(), aud);
+                }
+            }
+        }
+
+        List<String> uploadedPublicIds = new ArrayList<>();
+        try {
+            for (int i = 0; i < vocabularies.size(); i++) {
                 Vocabulary v = vocabularies.get(i);
                 v.setId(null);
                 v.setTopic(topic);
                 v.setCreatedAt(LocalDateTime.now());
-                FileResponse fileResponse = fileService.uploadImage(imageFiles.get(i));
-                v.setImageUrl(fileResponse.getUrl());
-                v.setPublicImageId(fileResponse.getPublicId());
-                fileResponse = fileService.uploadAudio(audioFiles.get(i));
-                v.setAudioUrl(fileResponse.getUrl());
-                v.setPublicAudioId(fileResponse.getPublicId());
-                publicIds.add(v.getPublicAudioId());
-                publicIds.add(v.getAudioUrl());
+
+                // Get corresponding request to read imageName/audioName
+                VocabularyRequest req = requests.get(i);
+
+                // Upload image if imageName provided and file exists in imageMap
+                if (req.getImageName() != null && !req.getImageName().isBlank()) {
+                    MultipartFile imageFile = imageMap.get(req.getImageName());
+                    if (imageFile != null && !imageFile.isEmpty()) {
+                        FileResponse fileResp = fileService.uploadImage(imageFile);
+                        v.setImageUrl(fileResp.getUrl());
+                        v.setPublicImageId(fileResp.getPublicId());
+                        uploadedPublicIds.add(fileResp.getPublicId());
+                    }
+                }
+
+                // Upload audio if audioName provided and file exists in audioMap
+                if (req.getAudioName() != null && !req.getAudioName().isBlank()) {
+                    MultipartFile audioFile = audioMap.get(req.getAudioName());
+                    if (audioFile != null && !audioFile.isEmpty()) {
+                        FileResponse fileResp = fileService.uploadAudio(audioFile);
+                        v.setAudioUrl(fileResp.getUrl());
+                        v.setPublicAudioId(fileResp.getPublicId());
+                        uploadedPublicIds.add(fileResp.getPublicId());
+                    }
+                }
             }
+
+            // Save all vocabularies
             vocabularyRepository.saveAll(vocabularies);
+
         } catch (Exception e) {
-            for(String publicId: publicIds){
-                fileService.deleteFile(publicId);
+            // Rollback any uploaded files
+            for (String publicId : uploadedPublicIds) {
+                try {
+                    fileService.deleteFile(publicId);
+                } catch (Exception ex) {
+                    log.warn("Failed to delete uploaded file during rollback: {}", ex.getMessage());
+                }
             }
             throw new RuntimeException(e);
         }
+
         return vocabularyMapper.toVocabularyResponses(vocabularies);
     }
 
@@ -440,6 +492,12 @@ public class VocabularyServiceImpl implements VocabularyService {
                 .build();
         test.setId(null);
         test = vocabularyTestRepository.save(test);
+        Map<String, MultipartFile> imageMap = new HashMap<>();
+        if (imageFiles != null) {
+            for (MultipartFile img : imageFiles) {
+                imageMap.put(img.getOriginalFilename(), img);
+            }
+        }
         List<VocabularyTestQuestion> questions = vocabularyMapper.toVocabularyTestQuestions(vocabularyTestRequest.getQuestions());
         List<String> publicIds = new ArrayList<>();
         VocabularyTestResponse vocabularyTestResponse;
@@ -448,7 +506,10 @@ public class VocabularyServiceImpl implements VocabularyService {
                 VocabularyTestQuestion q = questions.get(i);
                 q.setId(null);
                 q.setTest(test);
-                if(imageFiles!=null && imageFiles.size()>i && imageFiles.get(i)!=null && !imageFiles.get(i).isEmpty()){
+                String imageName = vocabularyTestRequest.getQuestions().get(i).getImageName();
+                if(imageName==null) continue;;
+                MultipartFile imageFile = imageMap.get(imageName);
+                if(imageFile!=null && !imageFile.isEmpty()){
                     FileResponse fileResponse = fileService.uploadImage(imageFiles.get(i));
                     q.setImageUrl(fileResponse.getUrl());
                     q.setPublicId(fileResponse.getPublicId());
@@ -465,6 +526,53 @@ public class VocabularyServiceImpl implements VocabularyService {
         vocabularyTestResponse = vocabularyMapper.toVocabularyTestResponse(test);
         vocabularyTestResponse.setQuestions(vocabularyMapper.toVocabularyTestQuestionResponses(questions));
         return  vocabularyTestResponse;
+    }
+
+    @Override
+    @Transactional
+    /**
+     * Excel format:
+     * | name | test1 |
+     * | duration | 10 |
+     * | question | optionA | optionB | optionC | optionD | correctAnswer | explaination | imageName |
+     */
+    public VocabularyTestResponse addTest(String topicId, MultipartFile excelFile, List<MultipartFile> imageFiles) {
+
+        try (InputStream is = excelFile.getInputStream();
+             Workbook workbook = new XSSFWorkbook(is)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            VocabularyTestRequest request = new VocabularyTestRequest();
+            request.setName(getCellValueAsString(sheet.getRow(0).getCell(1)));
+            request.setDuration(Integer.parseInt(getCellValueAsString(sheet.getRow(1).getCell(1))));
+
+            List<VocabularyTestQuestionRequest> questionRequests = new ArrayList<>();
+
+            for (int i = 3; i < sheet.getPhysicalNumberOfRows(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                VocabularyTestQuestionRequest q = new VocabularyTestQuestionRequest();
+                Options options = new Options();
+                q.setQuestion(getCellValueAsString(row.getCell(0)));
+                options.setA(getCellValueAsString(row.getCell(1)));
+                options.setB(getCellValueAsString(row.getCell(2)));
+                options.setC(getCellValueAsString(row.getCell(3)));
+                options.setD(getCellValueAsString(row.getCell(4)));
+                q.setOptions(options);
+                q.setCorrectAnswer(getCellValueAsString(row.getCell(5)));
+                q.setExplaination(getCellValueAsString(row.getCell(6)));
+                q.setImageName(getCellValueAsString(row.getCell(7)));
+
+                questionRequests.add(q);
+            }
+
+            request.setQuestions(questionRequests);
+            return addTest(topicId, request, imageFiles);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading Excel: " + e.getMessage(), e);
+        }
     }
 
     @Override

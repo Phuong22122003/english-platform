@@ -31,6 +31,7 @@ public interface VocabularyService {
     public GetTestsVocabByTopicIdResponse getTestsByTopicId(String topicId, int page, int size);
     public GetVocabularyTestQuestionResponse getTestQuestionsByTestId(String testId);
     public VocabularyTestResponse addTest(String topicId,VocabularyTestRequest vocabularyTestRequest, List<MultipartFile> imageFiles);
+    public VocabularyTestResponse addTest(String topicId,MultipartFile excelFile, List<MultipartFile> imageFiles);
     public VocabularyTestResponse updateTest(String testId,VocabularyTestRequest vocabularyTestRequest, List<MultipartFile> imageFiles);
     public List<VocabularyTestResponse> getTestsByIds(List<String> ids);
     public void deleteTest(String testId);

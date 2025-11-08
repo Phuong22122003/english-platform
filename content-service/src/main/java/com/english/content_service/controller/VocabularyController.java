@@ -131,6 +131,13 @@ public class VocabularyController {
             @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles) {
         return ResponseEntity.ok(vocabularyService.addTest(topicId, request, imageFiles));
     }
+    @PostMapping("/topics/{topic_id}/file-tests")
+    public ResponseEntity<VocabularyTestResponse> addTestByFile(
+            @PathVariable("topic_id") String topicId,
+            @RequestPart("test_file") MultipartFile excelFile,
+            @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles) {
+        return ResponseEntity.ok(vocabularyService.addTest(topicId, excelFile, imageFiles));
+    }
 
     @PutMapping("/tests/{test_id}")
     public ResponseEntity<VocabularyTestResponse> updateTest(
