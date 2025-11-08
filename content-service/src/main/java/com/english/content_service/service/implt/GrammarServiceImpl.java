@@ -1,6 +1,7 @@
 package com.english.content_service.service.implt;
 
 import com.english.content_service.dto.request.GrammarRequest;
+import com.english.content_service.dto.request.GrammarTestQuestionRequest;
 import com.english.content_service.dto.request.GrammarTestRequest;
 import com.english.content_service.dto.request.GrammarTopicRequest;
 import com.english.content_service.entity.Grammar;
@@ -23,6 +24,11 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +36,7 @@ import org.springframework.stereotype.Service;
 import com.english.content_service.service.GrammarService;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -301,4 +308,66 @@ public class GrammarServiceImpl implements GrammarService {
         grammarTestResponse.setQuestions(grammarMapper.toGrammarTestQuestionResponses(questions));
         return  grammarTestResponse;
     }
+
+    @Override
+    @Transactional
+    public GrammarTestResponse addTest(String grammarId, MultipartFile excelFile) {
+        try (InputStream is = excelFile.getInputStream();
+             Workbook workbook = new XSSFWorkbook(is)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            GrammarTestRequest request = new GrammarTestRequest();
+            request.setName(getCellValueAsString(sheet.getRow(0).getCell(1)));
+            request.setDuration(Integer.parseInt(getCellValueAsString(sheet.getRow(1).getCell(1))));
+
+            List<GrammarTestQuestionRequest> questionRequests = new ArrayList<>();
+
+            // bắt đầu từ dòng 3, bỏ header
+            for (int i = 3; i < sheet.getPhysicalNumberOfRows(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                GrammarTestQuestionRequest q = new GrammarTestQuestionRequest();
+                com.english.content_service.entity.Options options = new com.english.content_service.entity.Options();
+
+                q.setQuestion(getCellValueAsString(row.getCell(0)));
+                options.setA(getCellValueAsString(row.getCell(1)));
+                options.setB(getCellValueAsString(row.getCell(2)));
+                options.setC(getCellValueAsString(row.getCell(3)));
+                options.setD(getCellValueAsString(row.getCell(4)));
+                q.setOptions(options);
+
+                q.setCorrectAnswer(getCellValueAsString(row.getCell(5)));
+                q.setExplaination(getCellValueAsString(row.getCell(6)));
+                q.setAction(RequestType.ADD); // mặc định là ADD
+
+                questionRequests.add(q);
+            }
+
+            request.setQuestions(questionRequests);
+
+            // Gọi lại hàm addTest cũ để save
+            return addTest(grammarId, request);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading Excel file: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Helper đọc ô Excel sang String
+     */
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return null;
+
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue();
+            case NUMERIC -> String.valueOf((int) cell.getNumericCellValue());
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case FORMULA -> cell.getCellFormula();
+            default -> null;
+        };
+    }
+
 }

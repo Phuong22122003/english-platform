@@ -27,6 +27,7 @@ public interface GrammarService {
     //test
     GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size);
     GrammarTestResponse addTest(String grammarTopic, GrammarTestRequest request);
+    GrammarTestResponse addTest(String grammarTopic, MultipartFile excelFile);
     GetGrammarTestQuestionsByTestIdResponse getTestQuestionsByTestId(String testId);
     List<GrammarTestResponse> getTestsByIds(List<String> ids);
     void deleteTestById(String id);
