@@ -1,5 +1,6 @@
 package com.english.content_service.service.implt;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,9 +15,15 @@ import com.english.content_service.service.TopicViewStatisticService;
 import com.english.dto.response.*;
 import com.english.enums.RequestType;
 import com.english.enums.TopicType;
+import com.english.exception.BadRequestException;
 import com.english.exception.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -88,6 +95,48 @@ public class VocabularyServiceImpl implements VocabularyService {
                 .topicId(vocabularyTopic.getId())
                 .vocabularies(vocabularyMapper.toVocabularyResponses(vocabularies))
                 .build()).orElse(null);
+    }
+
+    @Override
+    @Transactional
+//  | word | phonetic | meaning | example | exampleMeaning | imageName | audioName |
+
+    public List<VocabularyResponse> addVocabularies(String topicId, MultipartFile excelFile, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles) {
+        List<VocabularyRequest> requests = new ArrayList<>();
+        try (InputStream is = excelFile.getInputStream();
+             Workbook workbook = new XSSFWorkbook(is)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) { // skip header row
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                VocabularyRequest request = new VocabularyRequest();
+
+                request.setWord(getCellValueAsString(row.getCell(0)));
+                request.setPhonetic(getCellValueAsString(row.getCell(1)));
+                request.setMeaning(getCellValueAsString(row.getCell(2)));
+                request.setExample(getCellValueAsString(row.getCell(3)));
+                request.setExampleMeaning(getCellValueAsString(row.getCell(4)));
+                request.setImageName(getCellValueAsString(row.getCell(5)));
+                request.setAudioName(getCellValueAsString(row.getCell(6)));
+
+                requests.add(request);
+            }
+
+        } catch (Exception e) {
+            throw new BadRequestException("Error parsing Excel file: " + e.getMessage());
+        }
+        return this.addVocabularies(topicId,requests,imageFiles,audioFiles);
+    }
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return "";
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue();
+            case NUMERIC -> String.valueOf((int) cell.getNumericCellValue());
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case FORMULA -> cell.getCellFormula();
+            default -> "";
+        };
     }
     @Override
     public GetTestsVocabByTopicIdResponse getTestsByTopicId(String topicId, int page, int size) {

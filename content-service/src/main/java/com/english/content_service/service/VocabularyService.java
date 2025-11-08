@@ -21,6 +21,7 @@ public interface VocabularyService {
     public List<VocabTopicResponse> getTopicsByIds(List<String> ids);
     //vocab
     public GetVocabularyTopicResponse getVocabulariesByTopicId(String topicId);
+    public List<VocabularyResponse> addVocabularies(String topicId,MultipartFile excelFile,List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
     public List<VocabularyResponse> addVocabularies(String topicId, List<VocabularyRequest> requests, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
     public List<VocabularyResponse> updateVocabularies(String topicId, List<VocabularyRequest> requests, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
     public VocabularyResponse updateVocabulary(String vocabId, VocabularyRequest request, MultipartFile imageFile, MultipartFile audioFile);

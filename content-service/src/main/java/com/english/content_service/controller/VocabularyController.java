@@ -80,6 +80,14 @@ public class VocabularyController {
             @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
         return ResponseEntity.ok(vocabularyService.addVocabularies(topicId, requests, imageFiles, audioFiles));
     }
+    @PostMapping("/topics/{topic_id}/file-vocabularies")
+    public ResponseEntity<?> addVocabulariesByFile(
+            @PathVariable("topic_id") String topicId,
+            @RequestPart("vocabulary_file") MultipartFile excelFile,
+            @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
+            @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
+        return ResponseEntity.ok(vocabularyService.addVocabularies(topicId, excelFile, imageFiles, audioFiles));
+    }
 
     @PutMapping("/topics/{topic_id}/vocabularies")
     public ResponseEntity<?> updateVocabularies(
