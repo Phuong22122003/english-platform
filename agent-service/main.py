@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter
 from app.api.v1 import *
-
+from app.core import settings
+print("VECTOR DB HOST:",settings.VECTOR_DB_HOST)
 app = FastAPI()
 agent_service_router = APIRouter(prefix="/agent-service", tags=["agent-service"])
 

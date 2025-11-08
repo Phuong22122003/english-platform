@@ -6,14 +6,14 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 from app.schemas import TopicCreateRequest
 from langchain_core.documents import Document
-
+from app.core import settings
 if not os.environ.get("GOOGLE_API_KEY"):
   os.environ["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
 
 class TopicService:
     def __init__(self):
         embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
-        client = QdrantClient(host="localhost", port=6333)
+        client = QdrantClient(host=settings.VECTOR_DB_HOST, port=6333)
         collection_name = "topics"
         vector_size = len(embeddings.embed_query("sample text"))
         if not client.collection_exists(collection_name):
