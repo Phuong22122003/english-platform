@@ -1,18 +1,16 @@
 package com.english.content_service.service.implt;
 
 import com.english.content_service.dto.request.ListeningRequest;
+import com.english.content_service.dto.request.ListeningTestQuestionRequest;
 import com.english.content_service.dto.request.ListeningTestRequest;
 import com.english.content_service.dto.request.ListeningTopicRequest;
-import com.english.content_service.entity.ListeningTestQuestion;
+import com.english.content_service.entity.*;
 import com.english.content_service.service.AgentService;
 import com.english.content_service.service.TopicViewStatisticService;
 import com.english.dto.response.FileResponse;
 import com.english.dto.response.ListeningResponse;
 import com.english.dto.response.ListeningTestReponse;
 import com.english.dto.response.ListeningTopicResponse;
-import com.english.content_service.entity.Listening;
-import com.english.content_service.entity.ListeningTest;
-import com.english.content_service.entity.ListeningTopic;
 import com.english.content_service.mapper.ListeningMapper;
 import com.english.content_service.repository.ListeningRepository;
 import com.english.content_service.repository.ListeningTestQuestionRepository;
@@ -27,6 +25,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +38,7 @@ import org.springframework.stereotype.Service;
 import com.english.content_service.service.ListeningService;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -150,50 +154,132 @@ public class ListeningServiceImpl implements ListeningService {
                                                     List<ListeningRequest> requests,
                                                     List<MultipartFile> imageFiles,
                                                     List<MultipartFile> audioFiles) {
-        // tìm topic theo id
-        ListeningTopic topic = listeningTopicRepository.findById(topicId)
-                .orElseThrow(() -> new RuntimeException("Topic not found"));
 
-        // map request -> entity
+        // 🔹 1. Tìm topic
+        ListeningTopic topic = listeningTopicRepository.findById(topicId)
+                .orElseThrow(() -> new NotFoundException("Topic not found"));
+
+        // 🔹 2. Map request -> entity
         List<Listening> listenings = listeningMapper.toListeningEntities(requests);
+
+        // 🔹 3. Tạo map để tra file nhanh theo tên file
+        Map<String, MultipartFile> imageMap = new HashMap<>();
+        if (imageFiles != null) {
+            for (MultipartFile img : imageFiles) {
+                if (img != null && !img.isEmpty() && img.getOriginalFilename() != null) {
+                    imageMap.put(img.getOriginalFilename(), img);
+                }
+            }
+        }
+
+        Map<String, MultipartFile> audioMap = new HashMap<>();
+        if (audioFiles != null) {
+            for (MultipartFile aud : audioFiles) {
+                if (aud != null && !aud.isEmpty() && aud.getOriginalFilename() != null) {
+                    audioMap.put(aud.getOriginalFilename(), aud);
+                }
+            }
+        }
+
         List<String> uploadedPublicIds = new ArrayList<>();
 
+        // 🔹 4. Upload file + save
         try {
             for (int i = 0; i < listenings.size(); i++) {
-                Listening listening = listenings.get(i);
-                listening.setTopic(topic);
-                listening.setCreatedAt(LocalDateTime.now());
+                Listening entity = listenings.get(i);
+                entity.setId(null);
+                entity.setTopic(topic);
+                entity.setCreatedAt(LocalDateTime.now());
 
-                // upload image nếu có
-                if (imageFiles != null && imageFiles.size() > i && imageFiles.get(i) != null && !imageFiles.get(i).isEmpty()) {
-                    var imageResponse = fileService.uploadImage(imageFiles.get(i));
-                    listening.setImageUrl(imageResponse.getUrl());
-                    listening.setPublicImageId(imageResponse.getPublicId());
-                    uploadedPublicIds.add(imageResponse.getPublicId());
+                ListeningRequest req = requests.get(i);
+
+                // 🖼 Upload image
+                if (req.getImageName() != null && !req.getImageName().isBlank()) {
+                    MultipartFile imageFile = imageMap.get(req.getImageName());
+                    if (imageFile != null && !imageFile.isEmpty()) {
+                        FileResponse imgResp = fileService.uploadImage(imageFile);
+                        entity.setImageUrl(imgResp.getUrl());
+                        entity.setPublicImageId(imgResp.getPublicId());
+                        uploadedPublicIds.add(imgResp.getPublicId());
+                    }
                 }
 
-                // upload audio nếu có
-                if (audioFiles != null && audioFiles.size() > i && audioFiles.get(i) != null && !audioFiles.get(i).isEmpty()) {
-                    var audioResponse = fileService.uploadAudio(audioFiles.get(i));
-                    listening.setAudioUrl(audioResponse.getUrl());
-                    listening.setPublicAudioId(audioResponse.getPublicId());
-                    uploadedPublicIds.add(audioResponse.getPublicId());
+                // 🔊 Upload audio
+                if (req.getAudioName() != null && !req.getAudioName().isBlank()) {
+                    MultipartFile audioFile = audioMap.get(req.getAudioName());
+                    if (audioFile != null && !audioFile.isEmpty()) {
+                        FileResponse audResp = fileService.uploadAudio(audioFile);
+                        entity.setAudioUrl(audResp.getUrl());
+                        entity.setPublicAudioId(audResp.getPublicId());
+                        uploadedPublicIds.add(audResp.getPublicId());
+                    }
                 }
             }
 
-            // save hết vào db
+            // 🧱 Save tất cả vào DB
             listeningRepository.saveAll(listenings);
 
         } catch (Exception e) {
-            // rollback file đã upload
+            // 🔁 Rollback file nếu lỗi
             for (String publicId : uploadedPublicIds) {
-                fileService.deleteFile(publicId);
+                try {
+                    fileService.deleteFile(publicId);
+                } catch (Exception ex) {
+                    log.warn("Failed to delete uploaded file during rollback: {}", ex.getMessage());
+                }
             }
             throw new RuntimeException("Failed to save listening list", e);
         }
 
-        // trả về response
+        // 🔹 5. Trả về response
         return listeningMapper.toListeningResponse(listenings);
+    }
+
+
+    @Override
+    @Transactional
+    public List<ListeningResponse> addListeningList(String topicId, MultipartFile excelFile,
+                                                    List<MultipartFile> imageFiles,
+                                                    List<MultipartFile> audioFiles) {
+        try (InputStream is = excelFile.getInputStream();
+             Workbook workbook = new XSSFWorkbook(is)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            List<ListeningRequest> requests = new ArrayList<>();
+
+            // Giả sử Excel format:
+            // | name | transcript | question | optionA | optionB | optionC | optionD | correctAnswer | imageName | audioName |
+            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) { // bắt đầu từ dòng 1, bỏ header
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                ListeningRequest req = new ListeningRequest();
+                req.setName(getCellValueAsString(row.getCell(0)));
+                req.setTranscript(getCellValueAsString(row.getCell(1)));
+                req.setQuestion(getCellValueAsString(row.getCell(2)));
+
+                Options options = new Options();
+                options.setA(getCellValueAsString(row.getCell(3)));
+                options.setB(getCellValueAsString(row.getCell(4)));
+                options.setC(getCellValueAsString(row.getCell(5)));
+                options.setD(getCellValueAsString(row.getCell(6)));
+                req.setOptions(options);
+
+                req.setCorrectAnswer(getCellValueAsString(row.getCell(7)));
+                req.setImageName(getCellValueAsString(row.getCell(8)));
+                req.setAudioName(getCellValueAsString(row.getCell(9)));
+                req.setAction(RequestType.ADD); // mặc định là ADD khi import
+
+                requests.add(req);
+            }
+
+            // Gọi lại hàm addListeningList đã viết sẵn để xử lý upload + save
+            return addListeningList(topicId, requests, imageFiles, audioFiles);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading Excel file: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -395,6 +481,79 @@ public class ListeningServiceImpl implements ListeningService {
 
         return response;
     }
+
+    @Override
+    @Transactional
+/**
+ * Excel format:
+ * | name | test1 |
+ * | duration | 10 |
+ * | question | optionA | optionB | optionC | optionD | correctAnswer | explanation | imageName | audioName |
+ */
+    public ListeningTestReponse addTest(
+            String topicId,
+            MultipartFile excelFile,
+            List<MultipartFile> imageFiles,
+            List<MultipartFile> audioFiles) {
+
+        try (InputStream is = excelFile.getInputStream();
+             Workbook workbook = new XSSFWorkbook(is)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // 🧱 1. Đọc thông tin test
+            ListeningTestRequest request = new ListeningTestRequest();
+            request.setName(getCellValueAsString(sheet.getRow(0).getCell(1)));
+            request.setDuration(Integer.parseInt(getCellValueAsString(sheet.getRow(1).getCell(1))));
+
+            // 🧱 2. Đọc danh sách câu hỏi
+            List<ListeningTestQuestionRequest> questionRequests = new ArrayList<>();
+
+            for (int i = 3; i < sheet.getPhysicalNumberOfRows(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                var q = new ListeningTestQuestionRequest();
+                var options = new Options();
+
+                q.setQuestion(getCellValueAsString(row.getCell(0)));
+                options.setA(getCellValueAsString(row.getCell(1)));
+                options.setB(getCellValueAsString(row.getCell(2)));
+                options.setC(getCellValueAsString(row.getCell(3)));
+                options.setD(getCellValueAsString(row.getCell(4)));
+                q.setOptions(options);
+
+                q.setCorrectAnswer(getCellValueAsString(row.getCell(5)));
+                q.setExplaination(getCellValueAsString(row.getCell(6)));
+                q.setImageName(getCellValueAsString(row.getCell(7)));
+                q.setAudioName(getCellValueAsString(row.getCell(8)));
+
+                questionRequests.add(q);
+            }
+
+            // 🧱 3. Gán vào request và gọi lại hàm xử lý chính
+            request.setQuestions(questionRequests);
+            return addTest(topicId, request, imageFiles, audioFiles);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading Excel file: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Helper để lấy giá trị cell dưới dạng String (tránh NullPointer)
+     */
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return "";
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue();
+            case NUMERIC -> String.valueOf((int) cell.getNumericCellValue());
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case FORMULA -> cell.getCellFormula();
+            default -> "";
+        };
+    }
+
 
     @Override
     public ListeningTestReponse getTestDetail(String testId) {

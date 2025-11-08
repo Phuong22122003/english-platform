@@ -79,6 +79,14 @@ public class ListeningController {
             @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
         return ResponseEntity.ok(listeningService.addListeningList(topicId, requests, imageFiles, audioFiles));
     }
+    @PostMapping("/topics/{topic_id}/file-listening")
+    public ResponseEntity<?> addListeningsByExcelFile(
+            @PathVariable("topic_id") String topicId,
+            @RequestPart("listening_file") MultipartFile excelFile,
+            @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
+            @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
+        return ResponseEntity.ok(listeningService.addListeningList(topicId, excelFile, imageFiles, audioFiles));
+    }
 
     @PutMapping("/listenings")
     public ResponseEntity<?> updateListeningList(
@@ -112,6 +120,14 @@ public class ListeningController {
             @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
             @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
         return ResponseEntity.ok(listeningService.addTest(topicId, request, imageFiles, audioFiles));
+    }
+    @PostMapping("/topics/{topic_id}/file-tests")
+    public ResponseEntity<ListeningTestReponse> addTestByExcelFile(
+            @PathVariable("topic_id") String topicId,
+            @RequestPart("test_file") MultipartFile excelFile,
+            @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
+            @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
+        return ResponseEntity.ok(listeningService.addTest(topicId, excelFile, imageFiles, audioFiles));
     }
 
     @GetMapping("/tests/{test_id}")
