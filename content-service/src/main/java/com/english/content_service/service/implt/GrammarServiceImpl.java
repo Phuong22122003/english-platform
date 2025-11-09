@@ -183,6 +183,7 @@ public class GrammarServiceImpl implements GrammarService {
         topic.setCreatedAt(LocalDateTime.now());
         topic.setName(request.getName());
         topic.setDescription(request.getDescription());
+        topic.setLevel(request.getLevel());
         if(imageFile!=null && !imageFile.isEmpty()){
             FileResponse fileResponse = fileService.uploadImage(imageFile);
             topic.setImageUrl(fileResponse.getUrl());
