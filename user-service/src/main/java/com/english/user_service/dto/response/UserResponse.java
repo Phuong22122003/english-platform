@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 
 import com.english.enums.Level;
-import com.english.user_service.enums.StudyTime;
+import com.english.enums.StudyTime;
 import com.english.user_service.enums.UserRole;
 import com.fasterxml.jackson.annotation.JsonInclude;
 

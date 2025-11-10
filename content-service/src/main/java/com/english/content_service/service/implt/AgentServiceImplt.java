@@ -25,6 +25,7 @@ public class AgentServiceImplt implements AgentService {
         topicRequest.setName(topic.getName());
         topicRequest.setDescription(topic.getDescription());
         topicRequest.setTopic_type("VOCABULARY");
+        topicRequest.setLevel(topic.getLevel());
         agentClient.addTopicTopVectorDB(topicRequest);
     }
 
@@ -35,6 +36,7 @@ public class AgentServiceImplt implements AgentService {
         topicRequest.setName(grammarTopic.getName());
         topicRequest.setDescription(grammarTopic.getDescription());
         topicRequest.setTopic_type("GRAMMAR");
+        topicRequest.setLevel(grammarTopic.getLevel());
         agentClient.addTopicTopVectorDB(topicRequest);
     }
 
@@ -45,6 +47,7 @@ public class AgentServiceImplt implements AgentService {
         topicRequest.setName(listeningTopic.getName());
         topicRequest.setDescription(listeningTopic.getDescription());
         topicRequest.setTopic_type("LISTENING");
+        topicRequest.setLevel(listeningTopic.getLevel());
         agentClient.addTopicTopVectorDB(topicRequest);
     }
 }

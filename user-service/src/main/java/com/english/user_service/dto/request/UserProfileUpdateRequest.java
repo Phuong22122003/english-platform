@@ -1,7 +1,7 @@
 package com.english.user_service.dto.request;
 
 
-import com.english.user_service.enums.StudyTime;
+import com.english.enums.StudyTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -28,7 +28,7 @@ class TopicService:
             embedding=embeddings,
         )
     def add_topic(self,topic: TopicCreateRequest):
-        doc = Document(page_content= f'{topic.name} {topic.description}',metadata={'id':topic.id,'name':topic.name,'description':topic.description,'topic_type':topic.topic_type })
+        doc = Document(page_content= f'{topic.name} {topic.description} {topic.level}',metadata={'id':topic.id,'name':topic.name,'description':topic.description,'topic_type':topic.topic_type, 'level': topic.level })
         self.vector_store.add_documents([doc])
     
     def search(self, query:str) ->list:
@@ -40,7 +40,8 @@ class TopicService:
                 'id':metadata['id'],
                 'name':metadata['name'],
                 'description':metadata['description'],
-                'topic_type':metadata['topic_type']
+                'topic_type':metadata['topic_type'],
+                'level': metadata.get('level', "beginner")
             }
             topics.append(topic)
         return topics

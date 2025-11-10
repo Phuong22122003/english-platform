@@ -38,35 +38,77 @@ def get_plan_prompt(user_info, current_time) -> str:
     }}
     """
     return prompt
+
 @mcp.prompt()
-def get_plan_group_prompt(plan):
-    ''''''
+def get_plan_group_prompt(plan: str, existingGroups: str = "[]", replaceIndex: int = -1):
+    """
+    Generate or update study groups (planGroups) for the user's learning plan.
+    Preserve all existing group details if present.
+    """
     plan = json.loads(plan)
-    prompt=f'''You are an expert English learning planner. Based on the user information and plan information, create a plan group for the user.\n
-    User Information: {plan['user_info']}\n
-    Plan Information: Title: {plan['title']}, description: {plan['description']}, startDate: {plan['startDate']}, endDate: {plan['endDate']}\n
-    Your response should be in JSON format as below
-    [{{
-        "name": "string",
-        "description": "string",
-        "startDate": "string",
-        "endDate": "string",
-    }},
+    existing_groups = json.loads(existingGroups)
+
+    prompt = f"""
+    You are an expert English learning planner.
+
+    Your task:
+    - If no groups exist yet (existingGroups is empty), create a full list of study groups for the user's learning plan.
+    - If existingGroups is not empty, **keep all groups unchanged except the one at replaceIndex**, which must be regenerated.
+    - If any group in existingGroups already includes a "details" field, **keep those details exactly as they are**.
+    - Always return the complete, final list of groups (not only the new one).
+
+    --- User Information ---
+    {json.dumps(plan['user_info'], ensure_ascii=False, indent=2)}
+
+    --- Plan Information ---
+    Title: {plan['title']}
+    Description: {plan['description']}
+    Study Period: {plan['startDate']} → {plan['endDate']}
+    Preferred Study Time: {plan.get('study_time', 'not specified')}
+
+    --- Existing Groups (Preserve "details" if present) ---
+    {json.dumps(existing_groups, ensure_ascii=False, indent=2)}
+
+    --- Replace Group Index ---
+    {replaceIndex}
+
+    --- Instructions ---
+    - Each group should have:
+    • "name": short descriptive title (≤ 60 chars)
+    • "description": 2–3 sentences explaining what to learn
+    • "startDate" and "endDate" within the plan’s time range
+    • "details": optional list of topics already generated → **keep them unchanged**
+    • study time aligned with user preference:
+        "morning" → 06:00–11:59
+        "afternoon" → 12:00–17:59
+        "evening" → 18:00–22:00
+    - When regenerating:
+    • Only replace the group at replaceIndex.
+    • Preserve all other groups (including their details) exactly as shown in existingGroups.
+    • Maintain consistent chronological order between startDate and endDate.
+
+    Return strictly in valid JSON array format:
+    [
     {{
         "name": "string",
         "description": "string",
-        "startDate": "string",
-        "endDate": "string",
+        "startDate": "YYYY-MM-DDTHH:mm:ss",
+        "endDate": "YYYY-MM-DDTHH:mm:ss",
+        "details": [{{ "topicType": "string", "topicId": "string" }}]  ← optional if exists
     }},
     ...
     ]
-    '''
+    """
     return prompt
+
+
 @mcp.prompt()
-def get_plan_detail_prompt(group, plan, topics) -> str:
+def get_plan_detail_prompt(group, plan, topics, existTopic) -> str:
     plan = json.loads(plan)
     group = json.loads(group)
     topics = json.loads(topics)
+    existTopic = json.loads(existTopic)
+
     prompt = f"""
     You are an English learning expert.
 
@@ -74,7 +116,7 @@ def get_plan_detail_prompt(group, plan, topics) -> str:
     Evaluate whether each topic below is suitable for the user's learning plan.
 
     User Plan:
-    User Info: {plan['user_info']}
+    User Info: {json.dumps(plan['user_info'], ensure_ascii=False)}
     Title: {plan['title']}
     Description: {plan['description']}
     Time Range: {plan['startDate']} → {plan['endDate']}
@@ -83,26 +125,25 @@ def get_plan_detail_prompt(group, plan, topics) -> str:
     Name: {group['name']}
     Description: {group['description']}
 
-    Topics:
+    Topics to consider:
     {json.dumps(topics, ensure_ascii=False, indent=2)}
 
-    Current Plan Group:
-    Name: {group['name']}
-    Description: {group['description']}
+    ❗ Already used in other groups (should NOT be reused):
+    {json.dumps(existTopic, ensure_ascii=False, indent=2)}
 
-    Topics:
-    {json.dumps(topics, ensure_ascii=False, indent=2)}
+    Instructions:
+    - Review each topic and decide if it fits this plan group.
+    - Do NOT approve any topic whose ID appears in the excluded list above.
+    - Each topic should appear in only one group.
+    - Return only the following JSON array format:
+      [
+        {{"topicId": "string", "approved": true/false, "reason": "string"}}
+      ]
 
-    For each topic, decide if it fits this plan group.
-    Return a JSON array in this format:
-    [
-      {{"topicId": "string", "approved": true/false, "reason": "string"}}
-    ]
-
-    Only each topic exist in one group. Not duplicate topic in multiple groups.
-    Return ONLY the JSON array. No explanation.
+    Return ONLY the JSON array. No explanations outside JSON.
     """
     return prompt
+
 
 @mcp.tool()
 def get_current_time(timezone: str = "Asia/Ho_Chi_Minh") -> str:

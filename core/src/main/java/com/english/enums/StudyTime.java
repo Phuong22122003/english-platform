@@ -1,4 +1,4 @@
-package com.english.user_service.enums;
+package com.english.enums;
 
 public enum StudyTime {
     MORNING,

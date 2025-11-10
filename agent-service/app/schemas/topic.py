@@ -1,4 +1,9 @@
 from pydantic import BaseModel
+from enum import Enum
+class LevelEnum(str, Enum):
+    BEGINNER = "BEGINNER"
+    INTERMEDIATE = "INTERMEDIATE"
+    ADVANCED = "ADVANCED"
 class TopicSuggestionRequest(BaseModel):
     name: str
     description: str
@@ -13,3 +18,4 @@ class TopicCreateRequest(BaseModel):
     topic_type: str
     name: str
     description: str
+    level: LevelEnum

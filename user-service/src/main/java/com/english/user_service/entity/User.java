@@ -3,13 +3,12 @@ package com.english.user_service.entity;
 import java.time.LocalDateTime;
 
 import com.english.enums.Level;
+import com.english.enums.StudyTime;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import com.english.user_service.enums.StudyTime;
 import com.english.user_service.enums.UserRole;
 
-import jakarta.annotation.Generated;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

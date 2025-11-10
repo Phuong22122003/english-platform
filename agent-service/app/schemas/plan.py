@@ -19,4 +19,5 @@ class Plan(TypedDict):
     startDate: str
     endDate:str
     planGroups: List[PlanGroup]
+    level: str
     
