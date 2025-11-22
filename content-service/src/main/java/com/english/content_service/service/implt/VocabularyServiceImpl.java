@@ -510,7 +510,7 @@ public class VocabularyServiceImpl implements VocabularyService {
                 if(imageName==null) continue;;
                 MultipartFile imageFile = imageMap.get(imageName);
                 if(imageFile!=null && !imageFile.isEmpty()){
-                    FileResponse fileResponse = fileService.uploadImage(imageFiles.get(i));
+                    FileResponse fileResponse = fileService.uploadImage(imageFile);
                     q.setImageUrl(fileResponse.getUrl());
                     q.setPublicId(fileResponse.getPublicId());
                     publicIds.add(q.getPublicId());

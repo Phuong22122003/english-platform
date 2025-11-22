@@ -436,6 +436,20 @@ public class ListeningServiceImpl implements ListeningService {
 
         test = listeningTestRepository.save(test);
 
+        Map<String, MultipartFile> imageMap = new HashMap<>();
+        if (imageFiles != null) {
+            for (MultipartFile img : imageFiles) {
+                imageMap.put(img.getOriginalFilename(), img);
+            }
+        }
+
+        Map<String, MultipartFile> audioMap = new HashMap<>();
+        if (audioFiles != null) {
+            for (MultipartFile audio : audioFiles) {
+                audioMap.put(audio.getOriginalFilename(), audio);
+            }
+        }
+
         // 3. map question request -> entity
         var questions = listeningMapper.toTestQuestions(request.getQuestions());
         List<String> uploadedPublicIds = new ArrayList<>();
@@ -444,18 +458,21 @@ public class ListeningServiceImpl implements ListeningService {
             for (int i = 0; i < questions.size(); i++) {
                 var q = questions.get(i);
                 q.setTest(test);
-
+                var qRequest = request.getQuestions().get(i);
+                var imageName = qRequest.getImageName();
                 // upload image nếu có
-                if (imageFiles != null && imageFiles.size() > i && imageFiles.get(i) != null && !imageFiles.get(i).isEmpty()) {
-                    var imageResponse = fileService.uploadImage(imageFiles.get(i));
+                if (imageName != null && !imageName.isEmpty()) {
+                    var imageResponse = fileService.uploadImage(imageMap.get(imageName));
                     q.setImageUrl(imageResponse.getUrl());
                     q.setPublicImageId(imageResponse.getPublicId());
                     uploadedPublicIds.add(imageResponse.getPublicId());
                 }
 
+                var audioName = qRequest.getAudioName();
+
                 // upload audio nếu có
-                if (audioFiles != null && audioFiles.size() > i && audioFiles.get(i) != null && !audioFiles.get(i).isEmpty()) {
-                    var audioResponse = fileService.uploadAudio(audioFiles.get(i));
+                if (audioName!=null && !audioName.isEmpty()) {
+                    var audioResponse = fileService.uploadAudio(audioMap.get(audioName));
                     q.setAudioUrl(audioResponse.getUrl());
                     q.setPublicAudioId(audioResponse.getPublicId());
                     uploadedPublicIds.add(audioResponse.getPublicId());
