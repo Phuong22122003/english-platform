@@ -18,6 +18,8 @@ public class QuestionResponse {
     private String correctAnswer;
     private Integer questionOrder;
     private String audioUrl;
+    private String imageUrl;
     private String userAnswer;
     private String explanation;
+    private Integer part;
 }

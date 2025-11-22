@@ -13,4 +13,5 @@ public class UserAnswerRequest {
     private String questionId;
     private String selectedAnswer;
     private boolean isCorrect = true;
+    private Integer part;
 }

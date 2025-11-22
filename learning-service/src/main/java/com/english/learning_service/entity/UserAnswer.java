@@ -27,4 +27,6 @@ public class UserAnswer {
 
     @Column(name = "is_correct", nullable = false)
     private boolean isCorrect;
+
+    private Integer part;
 }

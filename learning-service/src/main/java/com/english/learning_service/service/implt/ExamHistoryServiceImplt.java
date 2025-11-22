@@ -14,6 +14,7 @@ import com.english.learning_service.enums.FilterType;
 import com.english.learning_service.enums.ItemTypeEnum;
 import com.english.learning_service.httpclient.GrammarClient;
 import com.english.learning_service.httpclient.ListeningClient;
+import com.english.learning_service.httpclient.ToeicClient;
 import com.english.learning_service.httpclient.VocabularyClient;
 import com.english.learning_service.mapper.ExamHistoryMapper;
 import com.english.learning_service.repository.ExamHistoryRepository;
@@ -45,6 +46,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
     private VocabularyClient vocabularyClient;
     private GrammarClient grammarClient;
     private ListeningClient listeningClient;
+    private ToeicClient toeicClient;
     @Override
     public ExamHistoryResponse addExamHistory(ExamHistoryRequest request) {
         var context = SecurityContextHolder.getContext();
@@ -61,6 +63,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                     .examHistory(savedEntity)
                     .isCorrect(ua.isCorrect())
                     .questionId(ua.getQuestionId())
+                    .part(ua.getPart())
                     .build();
             userAnswers.add(userAnswer);
         }
@@ -85,7 +88,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
         List<String> grammarIds = new ArrayList<>();
         List<String> listeningIds = new ArrayList<>();
         List<String> vocabIds = new ArrayList<>();
-
+        List<String> toeicIds = new ArrayList<>();
         for(ExamHistory history: histories.getContent()){
             if(history.getTestType().equals(ItemTypeEnum.GRAMMAR)){
                 grammarIds.add(history.getTestId());
@@ -93,6 +96,8 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                 listeningIds.add(history.getTestId());
             } else if (history.getTestType().equals(ItemTypeEnum.VOCABULARY)) {
                 vocabIds.add(history.getTestId());
+            } else if (history.getTestType().equals(ItemTypeEnum.FULL_TEST)) {
+                toeicIds.add(history.getTestId());
             }
         }
         Map<String, Object> idToTest = new HashMap<>();
@@ -114,6 +119,13 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                 idToTest.put(listening.getId(),listening);
             }
         }
+        if(!toeicIds.isEmpty()){
+            List<ToeicTestResponse> toeicTestResponses = toeicClient.getTestsByIds(toeicIds);
+            for(var toeic: toeicTestResponses){
+                idToTest.put(toeic.getId(),toeic);
+            }
+        }
+
         List<ExamHistoryResponse> examHistoryResponses = examHistoryMapper.toExamHistoryResponses(histories.getContent());
         for(var h: examHistoryResponses){
             Object test = idToTest.get(h.getTestId());
@@ -130,6 +142,10 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                 var listening = (ListeningTestReponse) test;
                 h.setDuration(listening.getDuration());
                 h.setName(listening.getName());
+            } else if (h.getTestType().equals(ItemTypeEnum.FULL_TEST)) {
+                var toeic = (ToeicTestResponse) test;
+                h.setDuration(200);
+                h.setName(toeic.getName());
             }
         }
         return new PageImpl<>(examHistoryResponses,histories.getPageable(),histories.getTotalElements());
@@ -193,6 +209,23 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                             .question(q.getQuestion())
                             .audioUrl(q.getAudioUrl())
                             .explanation(q.getExplaination())
+                            .build());
+                }
+            }
+            case ItemTypeEnum.FULL_TEST -> {
+                ToeicTestResponse toeic = toeicClient.getTestDetail(examHistory.getTestId());
+                examHistoryResponse.setName(toeic.getName());
+                examHistoryResponse.setDuration(200);
+                for(var q: toeic.getQuestions()){
+                    questions.add(QuestionResponse.builder()
+                            .options(q.getOptions())
+                            .correctAnswer(q.getCorrectAnswer())
+                            .userAnswer(idToAnswer.get(q.getId()).getSelectedAnswer())
+                            .question(q.getQuestion())
+                            .audioUrl(q.getAudioUrl())
+                            .imageUrl(q.getImageUrl())
+                            .explanation(q.getExplanation())
+                            .part(q.getPart())
                             .build());
                 }
             }

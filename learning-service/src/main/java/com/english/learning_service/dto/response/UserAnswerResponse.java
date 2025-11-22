@@ -17,4 +17,5 @@ public class UserAnswerResponse {
     private String questionId;
     private String selectedAnswer;
     private boolean isCorrect;
+    private Integer part;
 }

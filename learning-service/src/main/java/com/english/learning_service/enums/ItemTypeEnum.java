@@ -11,6 +11,7 @@ public enum ItemTypeEnum {
             case VOCABULARY -> VOCABULARY;
             case GRAMMAR -> GRAMMAR;
             case LISTENING -> LISTENING;
+            case ALL -> FULL_TEST;
             default -> null; // or throw an exception if ALL doesn't make sense
         };
     }

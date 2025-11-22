@@ -95,6 +95,12 @@ public class ToeicServiceImplt implements ToeicService {
     }
 
     @Override
+    public List<ToeicTestResponse> getTestByIds(List<String> ids) {
+        List<ToeicTest> tests = toeicTestRepository.findAllById(ids);
+        return toeicMapper.toTestResponses(tests);
+    }
+
+    @Override
     public ToeicTestResponse getTestById(String id) {
         ToeicTest test = toeicTestRepository.findById(id)
                 .orElseThrow(()->new NotFoundException("Test not found"));
