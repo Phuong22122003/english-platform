@@ -45,8 +45,9 @@ async def check_pronunciation(file:UploadFile=File(...), text:str=Form(...)):
     
     audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
     audio = audio.set_channels(1).set_frame_rate(16000)
-    
-    audio_array = np.array(audio.get_array_of_samples())
+    # audio_array = np.array(audio.get_array_of_samples())
+    audio_array = np.array(audio.get_array_of_samples()).astype(np.float32)
+    audio_array /= 32768.0
     samplerate = audio.frame_rate  # sẽ là 16000 theo set_frame_rate
     # Xuất ra file WAV
     text = text.strip()
