@@ -71,7 +71,7 @@ public class ToeicController {
     }
 
     @PostMapping(
-            value = "/tests/{groupId}",
+            value = "/groups/{groupId}/test",
             consumes = {"multipart/form-data"}
     )
     public ResponseEntity<ToeicTestResponse> addTest(
@@ -82,7 +82,18 @@ public class ToeicController {
     ) {
         return ResponseEntity.ok(toeicService.addTest(groupId, request, images, audios));
     }
-
+    @PostMapping(
+            value = "/groups/{groupId}/file-tests",
+            consumes = {"multipart/form-data"}
+    )
+    public ResponseEntity<ToeicTestResponse> addTestByFile(
+            @PathVariable String groupId,
+            @RequestPart("data") ToeicTestRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @RequestPart(value = "audios", required = false) List<MultipartFile> audios
+    ) {
+        return ResponseEntity.ok(toeicService.addTest(groupId, request, images, audios));
+    }
     @PutMapping(
             value = "/tests/{id}",
             consumes = {"multipart/form-data"}

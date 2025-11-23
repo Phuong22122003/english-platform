@@ -3,6 +3,7 @@ package com.english.content_service.service.implt;
 import com.english.content_service.dto.request.ToeicTestGroupRequest;
 import com.english.content_service.dto.request.ToeicTestQuestionRequest;
 import com.english.content_service.dto.request.ToeicTestRequest;
+import com.english.content_service.entity.Options;
 import com.english.content_service.entity.ToeicTest;
 import com.english.content_service.entity.ToeicTestGroup;
 import com.english.content_service.entity.ToeicTestQuestion;
@@ -21,12 +22,19 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -114,7 +122,95 @@ public class ToeicServiceImplt implements ToeicService {
     // ========================================================================
     // TEST
     // ========================================================================
+//    Toeic Test
+//    NAME	ETS 2024
+//    PART 1
+//    QUESTION	A	B	C	D	CORRECT ANSWER	EXPLANATION	IMAGE NAME	AUDIO NAME
+//    PART 2
+//    QUESTION	A	B	C	D	CORRECT ANSWER	EXPLANATION	IMAGE NAME	AUDIO NAME
+//    PART 3
+//    QUESTION	A	B	C	D	CORRECT ANSWER	EXPLANATION	IMAGE NAME	AUDIO NAME
+//    PART 4
+//    QUESTION	A	B	C	D	CORRECT ANSWER	EXPLANATION	IMAGE NAME	AUDIO NAME
+//    PART 5
+//    QUESTION	A	B	C	D	CORRECT ANSWER	EXPLANATION	IMAGE NAME	AUDIO NAME
+//    PART 6
+//    QUESTION	A	B	C	D	CORRECT ANSWER	EXPLANATION	IMAGE NAME	AUDIO NAME
+//    PART 7
+//    QUESTION	A	B	C	D	CORRECT ANSWER	EXPLANATION	IMAGE NAME	AUDIO NAME
 
+    @Override
+    public ToeicTestResponse addTest(
+            String groupId,
+            MultipartFile excelFile,
+            List<MultipartFile> imageFiles,
+            List<MultipartFile> audioFiles) {
+        int rowAt = 0, columnAt = 0;
+        try(InputStream is = excelFile.getInputStream();
+            Workbook workbook = new XSSFWorkbook(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            ToeicTestRequest request = new ToeicTestRequest();
+            request.setName(getCellValueAsString(sheet.getRow(1).getCell(1)));
+            request.setQuestions(new ArrayList<>());
+            for (int i = 2; i < sheet.getPhysicalNumberOfRows(); i++){
+                rowAt = i;
+                if(i == 2|| i == 9||i==35||i==75||i==106||i==137||i==154) continue;
+                Row row = sheet.getRow(i);
+                ToeicTestQuestionRequest question = new ToeicTestQuestionRequest();
+                columnAt=0;
+                question.setQuestion(getCellValueAsString(row.getCell(0)));
+                Options options = new Options();
+                columnAt=1;
+                options.setA(getCellValueAsString(row.getCell(1)));
+                columnAt=2;
+                options.setB(getCellValueAsString(row.getCell(2)));
+                columnAt=3;
+                options.setC(getCellValueAsString(row.getCell(3)));
+                columnAt=4;
+                options.setD(getCellValueAsString(row.getCell(4)));
+                question.setOptions(options);
+                columnAt=5;
+                question.setCorrectAnswer(getCellValueAsString(row.getCell(5)));
+                columnAt=6;
+                question.setExplanation(getCellValueAsString(row.getCell(6)));
+                columnAt=7;
+                question.setImageName(getCellValueAsString(row.getCell(7)));
+                columnAt=8;
+                question.setAudioName(getCellValueAsString(row.getCell(8)));
+                columnAt=9;
+                if(i<9) question.setPart(1);
+                else if (i<35) {
+                    question.setPart(2);
+                }
+                else if (i<75){
+                    question.setPart(3);
+                } else if (i<106) {
+                    question.setPart(4);
+                } else if (i<137) {
+                    question.setPart(5);
+                } else if (i<154) {
+                    question.setPart(6);
+                }
+                else{
+                    question.setPart(7);
+                }
+                request.getQuestions().add(question);
+            }
+            return addTest(groupId,request,imageFiles,audioFiles);
+        } catch (Exception e) {
+            throw new RuntimeException("{row:"+rowAt+",column:"+columnAt+"}");
+        }
+    }
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return "";
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue();
+            case NUMERIC -> String.valueOf((int) cell.getNumericCellValue());
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case FORMULA -> cell.getCellFormula();
+            default -> "";
+        };
+    }
     @Override
     @Transactional
     public ToeicTestResponse addTest(

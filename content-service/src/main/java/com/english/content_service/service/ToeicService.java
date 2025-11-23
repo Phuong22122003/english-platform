@@ -20,6 +20,7 @@ public interface ToeicService {
     //test
     public List<ToeicTestResponse> getTestByIds(List<String> ids);
     public ToeicTestResponse getTestById(String id);
+    public ToeicTestResponse addTest(String groupId, MultipartFile excelFile, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
     public ToeicTestResponse addTest(String groupId,ToeicTestRequest request, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
     public void deleteTest(String id);
     public ToeicTestResponse updateTest(String id,ToeicTestRequest request, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
