@@ -74,6 +74,11 @@ public class ToeicController {
     public ResponseEntity<List<ToeicTestResponse>> getTestByIds(@RequestParam(name = "ids") List<String> ids) {
         return ResponseEntity.ok(toeicService.getTestByIds(ids));
     }
+    @PatchMapping("/tests/{test_id}")
+    public ResponseEntity<String> updateTotalCompletion(@PathVariable("test_id") String testId){
+        toeicService.updateTotalComplete(testId);
+        return ResponseEntity.ok("Updated successfully");
+    }
 
     @PostMapping(
             value = "/groups/{groupId}/test",

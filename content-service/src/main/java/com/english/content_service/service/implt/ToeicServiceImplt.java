@@ -15,7 +15,6 @@ import com.english.content_service.service.ToeicService;
 import com.english.dto.response.FileResponse;
 import com.english.dto.response.ToeicTestGroupResponse;
 import com.english.dto.response.ToeicTestResponse;
-import com.english.exception.AppException;
 import com.english.exception.NotFoundException;
 import com.english.service.FileService;
 import jakarta.transaction.Transactional;
@@ -66,7 +65,6 @@ public class ToeicServiceImplt implements ToeicService {
         }
         return new PageImpl<>(responses, PageRequest.of(page, limit), groups.getTotalElements());
     }
-
     @Override
     public ToeicTestGroupResponse getGroupById(String id) {
         ToeicTestGroup groups = toeicTestGroupRepository.findById(id).orElseThrow(() -> new NotFoundException("Can not found this group"));
@@ -76,7 +74,6 @@ public class ToeicServiceImplt implements ToeicService {
         response.setTests(toeicMapper.toTestResponses(tests));
         return response;
     }
-
     @Override
     @Transactional
     public ToeicTestGroupResponse addTestGroup(ToeicTestGroupRequest request) {
@@ -111,6 +108,13 @@ public class ToeicServiceImplt implements ToeicService {
 
         toeicTestGroupRepository.save(group);
         return toeicMapper.toGroupResponse(group);
+    }
+
+    @Override
+    public void updateTotalComplete(String testId) {
+        ToeicTest test = toeicTestRepository.findById(testId).orElseThrow(()->new NotFoundException("Test not found"));
+        test.setTotalCompletion(test.getTotalCompletion()+1);
+        toeicTestRepository.save(test);
     }
 
     @Override
@@ -151,6 +155,7 @@ public class ToeicServiceImplt implements ToeicService {
 //    QUESTION	A	B	C	D	CORRECT ANSWER	EXPLANATION	IMAGE NAME	AUDIO NAME
 
     @Override
+    @Transactional
     public ToeicTestResponse addTest(
             String groupId,
             MultipartFile excelFile,
@@ -244,51 +249,60 @@ public class ToeicServiceImplt implements ToeicService {
 
         List<ToeicTestQuestion> questions = toeicMapper.toTestQuestions(request.getQuestions());
 
-        List<String> uploadedPublicIds = new ArrayList<>();
+        Set<String> uploadedPublicIds = new HashSet<>();
+        Map<String, FileResponse> fileResponseMap = new HashMap<>();
 
-        Map<String, MultipartFile> imageMap = new HashMap<>();
-        if (imageFiles != null) {
-            for (MultipartFile img : imageFiles) {
-                imageMap.put(img.getOriginalFilename(), img);
+        try{
+            if (imageFiles != null) {
+                for (MultipartFile img : imageFiles) {
+                    FileResponse fileResponse = fileService.uploadImage(img);
+                    fileResponseMap.put(img.getOriginalFilename(), fileResponse);
+                    uploadedPublicIds.add(fileResponse.getPublicId());
+                }
+            }
+            if (audioFiles != null) {
+                for (MultipartFile audio : audioFiles) {
+                    FileResponse fileResponse = fileService.uploadAudio(audio);
+                    fileResponseMap.put(audio.getOriginalFilename(), fileResponse);
+                    uploadedPublicIds.add(fileResponse.getPublicId());
+                }
+            }
+        } catch (Exception e) {
+            uploadedPublicIds.forEach(pid -> {
+                try { fileService.deleteFile(pid); } catch (Exception ignore) {}
+            });
+            throw new RuntimeException("Can not upload file");
+        }
+
+
+        for (int i = 0; i < questions.size(); i++) {
+            ToeicTestQuestion q = questions.get(i);
+            q.setTest(test);
+            ToeicTestQuestionRequest qr = request.getQuestions().get(i);
+            // image upload
+            if (qr.getImageName()!=null && !qr.getImageName().isEmpty()) {
+                FileResponse img = fileResponseMap.get(qr.getImageName());
+                if(img==null) continue;
+                q.setImageUrl(img.getUrl());
+                q.setPublicImageId(img.getPublicId());
+            }
+
+            // audio upload
+            if (qr.getAudioName()!=null && !qr.getAudioName().isEmpty()) {
+                FileResponse audio = fileResponseMap.get(qr.getAudioName());
+                if(audio==null) continue;
+                q.setAudioUrl(audio.getUrl());
+                q.setPublicAudioId(audio.getPublicId());
             }
         }
-        Map<String, MultipartFile> audioMap = new HashMap<>();
-        if (audioFiles != null) {
-            for (MultipartFile audio : audioFiles) {
-                audioMap.put(audio.getOriginalFilename(), audio);
-            }
-        }
-
-
         try {
-            for (int i = 0; i < questions.size(); i++) {
-                ToeicTestQuestion q = questions.get(i);
-                q.setTest(test);
-                ToeicTestQuestionRequest qr = request.getQuestions().get(i);
-                // image upload
-                if (qr.getImageName()!=null && !qr.getImageName().isEmpty()) {
-                    FileResponse img = fileService.uploadImage(imageMap.get(qr.getImageName()));
-                    q.setImageUrl(img.getUrl());
-                    uploadedPublicIds.add(img.getPublicId());
-                }
-
-                // audio upload
-                if (qr.getAudioName()!=null && !qr.getAudioName().isEmpty()) {
-                    FileResponse audio = fileService.uploadAudio(audioMap.get(qr.getAudioName()));
-                    q.setAudioUrl(audio.getUrl());
-                    uploadedPublicIds.add(audio.getPublicId());
-                }
-            }
-
             toeicTestQuestionRepository.saveAll(questions);
-
         } catch (Exception e) {
             uploadedPublicIds.forEach(pid -> {
                 try { fileService.deleteFile(pid); } catch (Exception ignore) {}
             });
             throw e;
         }
-
         ToeicTestResponse response = toeicMapper.toTestResponse(test);
         response.setQuestions(toeicMapper.toQuestionResponses(questions));
         return response;
@@ -331,23 +345,34 @@ public class ToeicServiceImplt implements ToeicService {
         Map<String, ToeicTestQuestion> idMap = new HashMap<>();
         existingQuestions.forEach(q -> idMap.put(q.getId(), q));
 
-        Map<String, MultipartFile> imageMap = new HashMap<>();
-        if (imageFiles != null) {
-            for (MultipartFile img : imageFiles) {
-                imageMap.put(img.getOriginalFilename(), img);
-            }
-        }
-
-        Map<String, MultipartFile> audioMap = new HashMap<>();
-        if (audioFiles != null) {
-            for (MultipartFile audio : audioFiles) {
-                audioMap.put(audio.getOriginalFilename(), audio);
-            }
-        }
-
         List<ToeicTestQuestion> toSave = new ArrayList<>();
         List<String> toDeleteIds = new ArrayList<>();
-        List<String> uploadedPublicIds = new ArrayList<>();
+        Set<String> uploadedPublicIds = new HashSet<>();
+        Set<String> deletedPublicIds = new HashSet<>();
+        Map<String, FileResponse> fileResponseMap = new HashMap<>();
+        try {
+            if (imageFiles != null) {
+                for (MultipartFile img : imageFiles) {
+                    FileResponse fileResponse = fileService.uploadImage(img);
+                    fileResponseMap.put(img.getOriginalFilename(), fileResponse);
+                    uploadedPublicIds.add(fileResponse.getPublicId());
+                }
+            }
+            if (audioFiles != null) {
+                for (MultipartFile audio : audioFiles) {
+                    FileResponse fileResponse = fileService.uploadAudio(audio);
+                    fileResponseMap.put(audio.getOriginalFilename(), fileResponse);
+                    uploadedPublicIds.add(fileResponse.getPublicId());
+                }
+            }
+
+        } catch (RuntimeException e) {
+            // rollback uploaded files
+            for (String pid : uploadedPublicIds) {
+                try { fileService.deleteFile(pid); } catch (Exception ignored) {}
+            }
+            throw new RuntimeException(e);
+        }
 
         try {
             for (ToeicTestQuestionRequest qReq : request.getQuestions()) {
@@ -362,8 +387,8 @@ public class ToeicServiceImplt implements ToeicService {
                             toDeleteIds.add(qReq.getId());
                             var deletedQuestion = idMap.get(qReq.getId());
                             if(deletedQuestion==null) break;
-                            if(deletedQuestion.getPublicAudioId()!=null) fileService.deleteFile(deletedQuestion.getPublicAudioId());
-                            if(deletedQuestion.getPublicImageId()!=null) fileService.deleteFile(deletedQuestion.getPublicImageId());
+                            if(deletedQuestion.getPublicAudioId()!=null) deletedPublicIds.add(deletedQuestion.getPublicAudioId());
+                            if(deletedQuestion.getPublicImageId()!=null) deletedPublicIds.add(deletedQuestion.getPublicImageId());
                         }
                     }
 
@@ -379,21 +404,21 @@ public class ToeicServiceImplt implements ToeicService {
 
                         // IMAGE
                         if (qReq.getImageName() != null && !qReq.getImageName().isEmpty()) {
-                            MultipartFile imgFile = imageMap.get(qReq.getImageName());
-                            if (imgFile != null && !imgFile.isEmpty()) {
-                                FileResponse fr = fileService.uploadImage(imgFile);
+                            FileResponse fr = fileResponseMap.get(qReq.getImageName());
+                            if (fr != null ) {
+                                if(q.getPublicImageId()!=null) deletedPublicIds.add(q.getPublicImageId());
                                 q.setImageUrl(fr.getUrl());
-                                uploadedPublicIds.add(fr.getPublicId());
+                                q.setPublicImageId(fr.getPublicId());
                             }
                         }
 
                         // AUDIO
                         if (qReq.getAudioName() != null && !qReq.getAudioName().isEmpty()) {
-                            MultipartFile audioFile = audioMap.get(qReq.getAudioName());
-                            if (audioFile != null && !audioFile.isEmpty()) {
-                                FileResponse fr = fileService.uploadAudio(audioFile);
+                            FileResponse fr = fileResponseMap.get(qReq.getAudioName());
+                            if (fr != null ) {
+                                if(q.getPublicAudioId()!=null) deletedPublicIds.add(q.getPublicAudioId());
                                 q.setAudioUrl(fr.getUrl());
-                                uploadedPublicIds.add(fr.getPublicId());
+                                q.setPublicAudioId(fr.getPublicId());
                             }
                         }
 
@@ -409,24 +434,23 @@ public class ToeicServiceImplt implements ToeicService {
 
                         // IMAGE
                         if (qReq.getImageName() != null && !qReq.getImageName().isEmpty()) {
-                            MultipartFile imgFile = imageMap.get(qReq.getImageName());
-                            if (imgFile != null && !imgFile.isEmpty()) {
-                                FileResponse fr = fileService.uploadImage(imgFile);
+                            FileResponse fr = fileResponseMap.get(qReq.getImageName());
+                            if (fr != null ) {
                                 newQ.setImageUrl(fr.getUrl());
+                                newQ.setPublicImageId(fr.getPublicId());
                                 uploadedPublicIds.add(fr.getPublicId());
                             }
                         }
 
                         // AUDIO
                         if (qReq.getAudioName() != null && !qReq.getAudioName().isEmpty()) {
-                            MultipartFile audioFile = audioMap.get(qReq.getAudioName());
-                            if (audioFile != null && !audioFile.isEmpty()) {
-                                FileResponse fr = fileService.uploadAudio(audioFile);
+                            FileResponse fr = fileResponseMap.get(qReq.getAudioName());
+                            if (fr != null ) {
                                 newQ.setAudioUrl(fr.getUrl());
+                                newQ.setPublicAudioId(fr.getPublicId());
                                 uploadedPublicIds.add(fr.getPublicId());
                             }
                         }
-
                         toSave.add(newQ);
                     }
                 }
@@ -444,6 +468,17 @@ public class ToeicServiceImplt implements ToeicService {
                 try { fileService.deleteFile(pid); } catch (Exception ignored) {}
             }
             throw e;
+        }
+        List<ToeicTestQuestion> allNow = toeicTestQuestionRepository.findByTestId(test.getId());
+
+        for (ToeicTestQuestion q : allNow) {
+            deletedPublicIds.remove(q.getPublicImageId());
+            deletedPublicIds.remove(q.getPublicAudioId());
+        }
+
+        // delete publicId left
+        for (String pid : deletedPublicIds) {
+            try { fileService.deleteFile(pid); } catch (Exception ignored) {}
         }
 
         ToeicTestResponse res = toeicMapper.toTestResponse(test);

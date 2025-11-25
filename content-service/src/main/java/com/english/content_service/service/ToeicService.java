@@ -19,6 +19,7 @@ public interface ToeicService {
     public void deleteTestGroup(String id);
     public ToeicTestGroupResponse updateTestGroup(String id,ToeicTestGroupRequest request);
     //test
+    public void updateTotalComplete(String testId);
     public List<ToeicTestResponse> getTestByIds(List<String> ids);
     public ToeicTestResponse getTestById(String id);
     public ToeicTestResponse addTest(String groupId, MultipartFile excelFile, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);

@@ -21,6 +21,7 @@ import com.english.learning_service.repository.ExamHistoryRepository;
 import com.english.learning_service.repository.UserAnswerRepository;
 import com.english.learning_service.service.ExamHistoryService;
 import com.english.utilities.Common;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,11 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
     private ListeningClient listeningClient;
     private ToeicClient toeicClient;
     @Override
+    @Transactional
     public ExamHistoryResponse addExamHistory(ExamHistoryRequest request) {
+        if(request.getTestType().equals(ItemTypeEnum.FULL_TEST)){
+            toeicClient.updateTotalCompletion(request.getTestId());
+        }
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
         ExamHistory examHistory = examHistoryMapper.toExamHistory(request);
@@ -72,6 +77,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
     }
 
     @Override
+    @Transactional
     public Page<ExamHistoryResponse> getExamHistories(int page, int limit, FilterType filterType) {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
@@ -153,6 +159,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
 
 
     @Override
+    @Transactional
     public ExamHistoryResponse getExamHistoryDetail(String examHistoryId) {
         ExamHistory examHistory = examHistoryRepository.findById(examHistoryId).orElseThrow(()-> new NotFoundException("Exam history not found"));
         ExamHistoryResponse examHistoryResponse = examHistoryMapper.toExamHistoryResponse(examHistory);
