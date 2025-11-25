@@ -15,6 +15,7 @@ import com.english.content_service.service.ToeicService;
 import com.english.dto.response.FileResponse;
 import com.english.dto.response.ToeicTestGroupResponse;
 import com.english.dto.response.ToeicTestResponse;
+import com.english.exception.AppException;
 import com.english.exception.NotFoundException;
 import com.english.service.FileService;
 import jakarta.transaction.Transactional;
@@ -67,6 +68,16 @@ public class ToeicServiceImplt implements ToeicService {
     }
 
     @Override
+    public ToeicTestGroupResponse getGroupById(String id) {
+        ToeicTestGroup groups = toeicTestGroupRepository.findById(id).orElseThrow(() -> new NotFoundException("Can not found this group"));
+        var response = toeicMapper.toGroupResponse(groups);
+        List<ToeicTest> tests;
+        tests = toeicTestRepository.findByGroupId(response.getId());
+        response.setTests(toeicMapper.toTestResponses(tests));
+        return response;
+    }
+
+    @Override
     @Transactional
     public ToeicTestGroupResponse addTestGroup(ToeicTestGroupRequest request) {
         ToeicTestGroup group = ToeicTestGroup.builder()
@@ -115,7 +126,7 @@ public class ToeicServiceImplt implements ToeicService {
         List<ToeicTestQuestion> questions = toeicTestQuestionRepository.findByTestId(test.getId());
         ToeicTestResponse response = toeicMapper.toTestResponse(test);
         response.setQuestions(toeicMapper.toQuestionResponses(questions));
-        return null;
+        return response;
     }
 
 
@@ -263,9 +274,9 @@ public class ToeicServiceImplt implements ToeicService {
 
                 // audio upload
                 if (qr.getAudioName()!=null && !qr.getAudioName().isEmpty()) {
-                    FileResponse img = fileService.uploadAudio(audioMap.get(qr.getImageName()));
-                    q.setImageUrl(img.getUrl());
-                    uploadedPublicIds.add(img.getPublicId());
+                    FileResponse audio = fileService.uploadAudio(audioMap.get(qr.getAudioName()));
+                    q.setAudioUrl(audio.getUrl());
+                    uploadedPublicIds.add(audio.getPublicId());
                 }
             }
 

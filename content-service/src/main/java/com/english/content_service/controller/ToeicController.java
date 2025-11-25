@@ -37,6 +37,11 @@ public class ToeicController {
         return ResponseEntity.ok(toeicService.getGroups(page, limit));
     }
 
+    @GetMapping("/groups/{id}")
+    public ResponseEntity<ToeicTestGroupResponse> getGroups(@PathVariable String id) {
+        return ResponseEntity.ok(toeicService.getGroupById(id));
+    }
+
     @PostMapping("/groups")
     public ResponseEntity<ToeicTestGroupResponse> addGroup(@RequestBody ToeicTestGroupRequest request) {
         return ResponseEntity.ok(toeicService.addTestGroup(request));

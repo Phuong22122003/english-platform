@@ -14,6 +14,7 @@ import java.util.List;
 public interface ToeicService {
     //group
     public Page<ToeicTestGroupResponse> getGroups(int page, int limit);
+    public ToeicTestGroupResponse getGroupById(String id);
     public ToeicTestGroupResponse addTestGroup(ToeicTestGroupRequest request);
     public void deleteTestGroup(String id);
     public ToeicTestGroupResponse updateTestGroup(String id,ToeicTestGroupRequest request);
