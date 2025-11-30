@@ -161,62 +161,117 @@ public class ToeicServiceImplt implements ToeicService {
             MultipartFile excelFile,
             List<MultipartFile> imageFiles,
             List<MultipartFile> audioFiles) {
+
         int rowAt = 0, columnAt = 0;
-        try(InputStream is = excelFile.getInputStream();
-            Workbook workbook = new XSSFWorkbook(is)) {
+
+        log.info("📝 [ADD TEST EXCEL] groupId={}, fileName={}, size={}",
+                groupId,
+                excelFile != null ? excelFile.getOriginalFilename() : "null",
+                excelFile != null ? excelFile.getSize() : 0);
+
+        try (InputStream is = excelFile.getInputStream();
+             Workbook workbook = new XSSFWorkbook(is)) {
+
             Sheet sheet = workbook.getSheetAt(0);
+            log.info("📄 Loaded sheet: name='{}', physicalRows={}",
+                    sheet.getSheetName(),
+                    sheet.getPhysicalNumberOfRows());
+
             ToeicTestRequest request = new ToeicTestRequest();
             request.setName(getCellValueAsString(sheet.getRow(1).getCell(1)));
+            log.info("📌 Test name from Excel (row=2,col=B): '{}'",
+                    request.getName());
+
             request.setQuestions(new ArrayList<>());
-            for (int i = 2; i < sheet.getPhysicalNumberOfRows(); i++){
+
+            for (int i = 2; i < sheet.getPhysicalNumberOfRows(); i++) {
                 rowAt = i;
-                if(i == 2|| i == 9||i==35||i==75||i==106||i==137||i==154) continue;
+
+                if (i == 2 || i == 9 || i == 35 || i == 75 || i == 106 || i == 137 || i == 154) {
+                    Row headerRow = sheet.getRow(i);
+                    String headerText = headerRow != null ? getCellValueAsString(headerRow.getCell(0)) : null;
+                    log.info("🔹 Skip header row i={} (excelRow={}), header='{}'",
+                            i, (i + 1), headerText);
+                    continue;
+                }
+
                 Row row = sheet.getRow(i);
+
                 ToeicTestQuestionRequest question = new ToeicTestQuestionRequest();
-                columnAt=0;
+
+                columnAt = 0;
                 question.setQuestion(getCellValueAsString(row.getCell(0)));
+
                 Options options = new Options();
-                columnAt=1;
+
+                columnAt = 1;
                 options.setA(getCellValueAsString(row.getCell(1)));
-                columnAt=2;
+                columnAt = 2;
                 options.setB(getCellValueAsString(row.getCell(2)));
-                columnAt=3;
+                columnAt = 3;
                 options.setC(getCellValueAsString(row.getCell(3)));
-                columnAt=4;
+                columnAt = 4;
                 options.setD(getCellValueAsString(row.getCell(4)));
+
                 question.setOptions(options);
-                columnAt=5;
+
+                columnAt = 5;
                 question.setCorrectAnswer(getCellValueAsString(row.getCell(5)));
-                columnAt=6;
+
+                columnAt = 6;
                 question.setExplanation(getCellValueAsString(row.getCell(6)));
-                columnAt=7;
+
+                columnAt = 7;
                 question.setImageName(getCellValueAsString(row.getCell(7)));
-                columnAt=8;
+
+                columnAt = 8;
                 question.setAudioName(getCellValueAsString(row.getCell(8)));
-                columnAt=9;
-                if(i<9) question.setPart(1);
-                else if (i<35) {
+
+                columnAt = 9;
+                if (i < 9) {
+                    question.setPart(1);
+                } else if (i < 35) {
                     question.setPart(2);
-                }
-                else if (i<75){
+                } else if (i < 75) {
                     question.setPart(3);
-                } else if (i<106) {
+                } else if (i < 106) {
                     question.setPart(4);
-                } else if (i<137) {
+                } else if (i < 137) {
                     question.setPart(5);
-                } else if (i<154) {
+                } else if (i < 154) {
                     question.setPart(6);
-                }
-                else{
+                } else {
                     question.setPart(7);
                 }
+
+                log.debug("➡️ Parsed questionIdx={}, excelRow={}, part={}, question='{}', image='{}', audio='{}'",
+                        request.getQuestions().size() + 1,
+                        (i + 1),
+                        question.getPart(),
+                        question.getQuestion(),
+                        question.getImageName(),
+                        question.getAudioName());
+
                 request.getQuestions().add(question);
             }
-            return addTest(groupId,request,imageFiles,audioFiles);
+
+            log.info("✅ Finished parsing Excel. Total questions parsed: {}", request.getQuestions().size());
+
+            return addTest(groupId, request, imageFiles, audioFiles);
+
         } catch (Exception e) {
-            throw new RuntimeException("{row:"+rowAt+",column:"+columnAt+"}");
+            log.error("❌ Error while parsing Excel at rowAt={}, columnAt={}, excelRow={}, excelCol={} -> {}",
+                    rowAt,
+                    columnAt,
+                    (rowAt + 1),
+                    (columnAt + 1),
+                    e.getMessage(),
+                    e);
+
+            throw new RuntimeException("{row:" + rowAt + ",column:" + columnAt + "}");
         }
     }
+
     private String getCellValueAsString(Cell cell) {
         if (cell == null) return "";
         return switch (cell.getCellType()) {
@@ -235,8 +290,14 @@ public class ToeicServiceImplt implements ToeicService {
             List<MultipartFile> imageFiles,
             List<MultipartFile> audioFiles) {
 
+        log.info("➕ [ADD TEST] groupId={}, testName={}", groupId, request.getName());
+        log.info("📌 Total questions from request: {}", request.getQuestions() != null ? request.getQuestions().size() : 0);
+
         ToeicTestGroup group = toeicTestGroupRepository.findById(groupId)
-                .orElseThrow(() -> new NotFoundException("Group not found"));
+                .orElseThrow(() -> {
+                    log.error("❌ Group not found: {}", groupId);
+                    return new NotFoundException("Group not found");
+                });
 
         ToeicTest test = ToeicTest.builder()
                 .name(request.getName())
@@ -246,65 +307,119 @@ public class ToeicServiceImplt implements ToeicService {
                 .build();
 
         test = toeicTestRepository.save(test);
+        log.info("📝 Test created: id={}, name={}", test.getId(), test.getName());
 
         List<ToeicTestQuestion> questions = toeicMapper.toTestQuestions(request.getQuestions());
+        log.info("📌 Mapped {} questions to entity", questions.size());
 
         Set<String> uploadedPublicIds = new HashSet<>();
         Map<String, FileResponse> fileResponseMap = new HashMap<>();
 
-        try{
+        // ------------------------
+        // UPLOAD FILES (IMAGE/AUDIO)
+        // ------------------------
+        try {
             if (imageFiles != null) {
+                log.info("📸 Uploading {} image files...", imageFiles.size());
                 for (MultipartFile img : imageFiles) {
+                    log.info("➡️ Upload image: {}", img.getOriginalFilename());
                     FileResponse fileResponse = fileService.uploadImage(img);
+                    log.info("   ✔ Uploaded image: name={}, url={}", img.getOriginalFilename(), fileResponse.getUrl());
+
                     fileResponseMap.put(img.getOriginalFilename(), fileResponse);
                     uploadedPublicIds.add(fileResponse.getPublicId());
                 }
             }
+
             if (audioFiles != null) {
+                log.info("🔊 Uploading {} audio files...", audioFiles.size());
                 for (MultipartFile audio : audioFiles) {
+                    log.info("➡️ Upload audio: {}", audio.getOriginalFilename());
                     FileResponse fileResponse = fileService.uploadAudio(audio);
+                    log.info("   ✔ Uploaded audio: name={}, url={}", audio.getOriginalFilename(), fileResponse.getUrl());
+
                     fileResponseMap.put(audio.getOriginalFilename(), fileResponse);
                     uploadedPublicIds.add(fileResponse.getPublicId());
                 }
             }
         } catch (Exception e) {
+            log.error("❌ Error while uploading files: {}", e.getMessage());
+            log.warn("🗑 Rolling back uploaded files...");
             uploadedPublicIds.forEach(pid -> {
-                try { fileService.deleteFile(pid); } catch (Exception ignore) {}
+                try {
+                    fileService.deleteFile(pid);
+                    log.info("   ✔ Deleted uploaded file pid={}", pid);
+                } catch (Exception ignore) {}
             });
             throw new RuntimeException("Can not upload file");
         }
 
+        // ------------------------
+        // MAP IMAGE & AUDIO TO QUESTIONS
+        // ------------------------
+        log.info("🔗 Mapping images/audio to questions...");
 
         for (int i = 0; i < questions.size(); i++) {
+
             ToeicTestQuestion q = questions.get(i);
-            q.setTest(test);
             ToeicTestQuestionRequest qr = request.getQuestions().get(i);
-            // image upload
-            if (qr.getImageName()!=null && !qr.getImageName().isEmpty()) {
+
+            q.setTest(test);
+
+            log.info("➡️ [Q{}] question='{}'", i + 1, qr.getQuestion());
+
+            // Image
+            if (qr.getImageName() != null && !qr.getImageName().isEmpty()) {
                 FileResponse img = fileResponseMap.get(qr.getImageName());
-                if(img==null) continue;
-                q.setImageUrl(img.getUrl());
-                q.setPublicImageId(img.getPublicId());
+                log.info("   🖼 ImageName={} -> {}", qr.getImageName(), img != null ? "FOUND" : "NOT FOUND");
+
+                if (img != null) {
+                    q.setImageUrl(img.getUrl());
+                    q.setPublicImageId(img.getPublicId());
+                }
             }
 
-            // audio upload
-            if (qr.getAudioName()!=null && !qr.getAudioName().isEmpty()) {
+            // Audio
+            if (qr.getAudioName() != null && !qr.getAudioName().isEmpty()) {
                 FileResponse audio = fileResponseMap.get(qr.getAudioName());
-                if(audio==null) continue;
-                q.setAudioUrl(audio.getUrl());
-                q.setPublicAudioId(audio.getPublicId());
+                log.info("   🔊 AudioName={} -> {}", qr.getAudioName(), audio != null ? "FOUND" : "NOT FOUND");
+
+                if (audio != null) {
+                    q.setAudioUrl(audio.getUrl());
+                    q.setPublicAudioId(audio.getPublicId());
+                }
             }
         }
+
+        // ------------------------
+        // SAVE QUESTIONS INTO DB
+        // ------------------------
         try {
             toeicTestQuestionRepository.saveAll(questions);
+            log.info("💾 Saved {} questions to DB successfully!", questions.size());
         } catch (Exception e) {
+            log.error("❌ Error saving questions: {}", e.getMessage());
+            log.warn("🗑 Rolling back uploaded files...");
+
             uploadedPublicIds.forEach(pid -> {
-                try { fileService.deleteFile(pid); } catch (Exception ignore) {}
+                try {
+                    fileService.deleteFile(pid);
+                    log.info("   ✔ Deleted uploaded file pid={}", pid);
+                } catch (Exception ignore) {}
             });
+
             throw e;
         }
+
+        // ------------------------
+        // CREATE RESPONSE
+        // ------------------------
         ToeicTestResponse response = toeicMapper.toTestResponse(test);
         response.setQuestions(toeicMapper.toQuestionResponses(questions));
+
+        log.info("✅ Test created successfully! testId={}, questions={}",
+                test.getId(), response.getQuestions().size());
+
         return response;
     }
 

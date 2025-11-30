@@ -98,7 +98,7 @@ public class ToeicController {
     )
     public ResponseEntity<ToeicTestResponse> addTestByFile(
             @PathVariable String groupId,
-            @RequestPart("data") ToeicTestRequest request,
+            @RequestPart("full_test_file") MultipartFile request,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @RequestPart(value = "audios", required = false) List<MultipartFile> audios
     ) {
