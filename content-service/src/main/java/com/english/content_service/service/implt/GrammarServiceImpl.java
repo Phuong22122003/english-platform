@@ -251,6 +251,7 @@ public class GrammarServiceImpl implements GrammarService {
         }
 
         grammarTopicRepository.deleteById(topicId);
+        agentService.deleteTopicFromVectorDB(topicId);
     }
 
 

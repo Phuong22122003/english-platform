@@ -10,4 +10,5 @@ public interface AgentService {
     public void addTopicToVectorDB(VocabularyTopic topic);
     public void addTopicToVectorDB(GrammarTopic grammarTopic);
     public void addTopicToVectorDB(ListeningTopic listeningTopic);
+    public void deleteTopicFromVectorDB(String topicId);
 }

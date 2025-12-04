@@ -50,4 +50,9 @@ public class AgentServiceImplt implements AgentService {
         topicRequest.setLevel(listeningTopic.getLevel());
         agentClient.addTopicTopVectorDB(topicRequest);
     }
+
+    @Override
+    public void deleteTopicFromVectorDB(String topicId) {
+        agentClient.deleteTopicFromVectorDB(topicId);
+    }
 }

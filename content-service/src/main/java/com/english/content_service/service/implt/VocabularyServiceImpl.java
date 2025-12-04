@@ -210,12 +210,17 @@ public class VocabularyServiceImpl implements VocabularyService {
         VocabularyTopic topic = this.vocabularyTopicRepository.findById(topicId).orElseThrow(()->{
             return new NotFoundException("Topic not found");
         });
+        List<String> publicIds = vocabularyTestQuestionRepository.findAllPublicIdsByTopicId(topicId);
         this.vocabularyTestQuestionRepository.deleteByTopicId(topicId);
         this.vocabularyTestRepository.deleteByTopicId(topicId);
         this.vocabularyTopicRepository.delete(topic);
-        this.fileService.deleteFile(topic.getPublicId());
-        List<String> publicIds = vocabularyTestQuestionRepository.findAllPublicIdsByTopicId(topicId);
-        fileService.deleteFiles(publicIds);
+        this.agentService.deleteTopicFromVectorDB(topicId);
+        try{
+            this.fileService.deleteFile(topic.getPublicId());
+            this.fileService.deleteFiles(publicIds);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Override

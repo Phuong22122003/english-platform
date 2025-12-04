@@ -8,6 +8,8 @@ def add_topic(topic:TopicCreateRequest):
     topic_service.add_topic(topic)
     return "Add topic successfully"
 
-@router.delete("/{id}")
-def delete_topic(id: str):
-    pass
+@router.delete("/{topic_id}")
+def delete_topic(topic_id: str):
+    topic_service.delete_topic(topic_id)
+    return "Delete topic successfully"
+    

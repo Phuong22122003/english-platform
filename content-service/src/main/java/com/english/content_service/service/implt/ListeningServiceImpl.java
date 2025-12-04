@@ -127,13 +127,34 @@ public class ListeningServiceImpl implements ListeningService {
     @Override
     @Transactional
     public void deleteTopic(String topicId) {
+        ListeningTopic topic = listeningTopicRepository.findById(topicId).orElseThrow(()-> new NotFoundException("Topic not found"));
+        if(topic.getPublicId()==null) throw new RuntimeException("Topic not found");
+        // delete test
         List<ListeningTest> tests = listeningTestRepository.findAllByTopicId(topicId);
         for(var t: tests){
             deleteTest(t.getId());
         }
-        ListeningTopic topic = listeningTopicRepository.findById(topicId).orElseThrow(()-> new NotFoundException("Topic not found"));
+
+        // delete listening
+        List<Listening> listeningList = listeningRepository.findByTopicId(topicId);
+        listeningRepository.deleteAll(listeningList);
+
         listeningTopicRepository.delete(topic);
-        if(topic.getPublicId()!=null) fileService.deleteFile(topic.getPublicId());
+
+        agentService.deleteTopicFromVectorDB(topicId);
+
+        try {
+            for(var listening: listeningList){
+                if(listening.getPublicImageId()!=null && !listening.getPublicImageId().isEmpty())
+                    fileService.deleteFile(listening.getPublicImageId());
+                if(listening.getPublicAudioId()!=null && !listening.getPublicAudioId().isEmpty())
+                    fileService.deleteFile(listening.getPublicAudioId());
+            }
+            fileService.deleteFile(topic.getPublicId());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+
     }
 
     @Override
@@ -729,6 +750,10 @@ public class ListeningServiceImpl implements ListeningService {
     @Transactional
     public void deleteTest(String testId) {
         List<ListeningTestQuestion> questions = listeningTestQuestionRepository.findByTestId(testId);
+
+        listeningTestQuestionRepository.deleteByTestId(testId);
+        listeningTestRepository.deleteById(testId);
+
         try{
             for(var q: questions){
                 if(q.getPublicAudioId()!=null)
@@ -739,8 +764,6 @@ public class ListeningServiceImpl implements ListeningService {
         } catch (Exception e) {
             log.error(e.getMessage());
         }
-        listeningTestQuestionRepository.deleteByTestId(testId);
-        listeningTestRepository.deleteById(testId);
     }
 
 }
