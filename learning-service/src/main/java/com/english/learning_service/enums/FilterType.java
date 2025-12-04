@@ -4,5 +4,6 @@ public enum FilterType {
     VOCABULARY,
     GRAMMAR,
     LISTENING,
-    ALL
+    ALL,
+    FULL_TEST
 }
