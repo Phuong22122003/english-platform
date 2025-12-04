@@ -32,7 +32,7 @@ class TopicService:
         doc = Document(page_content= f'{topic.name} {topic.description} {topic.level}',metadata={'id':topic.id,'name':topic.name,'description':topic.description,'topic_type':topic.topic_type, 'level': topic.level })
         self.vector_store.add_documents([doc])
         
-    def delete_topic(self,topic_id:str):{
+    def delete_topic(self,topic_id:str):
         self.client.delete(
             collection_name="topics",
             points_selector=Filter(
@@ -44,7 +44,7 @@ class TopicService:
                 ]
             )
         )
-    }
+    
     def search(self, query:str) ->list:
         results = self.vector_store.similarity_search(query=query,k=5)
         topics = []
