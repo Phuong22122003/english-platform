@@ -20,6 +20,7 @@ import com.english.enums.RequestType;
 import com.english.enums.TopicType;
 import com.english.exception.NotFoundException;
 import com.english.service.FileService;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,7 @@ public class GrammarServiceImpl implements GrammarService {
     TopicViewStatisticService topicViewStatisticService;
     FileService fileService;
     AgentService agentService;
+    EntityManager entityManager;
 
     @Override
     public Page<GrammarTopicResponse> search(String query, int page, int limit) {
@@ -249,7 +251,8 @@ public class GrammarServiceImpl implements GrammarService {
 
             grammarRepository.deleteByTopicId(topicId);
         }
-
+        entityManager.flush();
+        entityManager.clear();
         grammarTopicRepository.deleteById(topicId);
         agentService.deleteTopicFromVectorDB(topicId);
     }
@@ -262,6 +265,7 @@ public class GrammarServiceImpl implements GrammarService {
                 .builder()
                 .title(request.getTitle())
                 .content(request.getContent())
+                .description(request.getDescription())
                 .topic(topic)
                 .createdAt(LocalDateTime.now())
                 .build();

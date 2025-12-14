@@ -14,4 +14,5 @@ public class GrammarRequest {
     private String title;
     private Level level;
     private String content;
+    private String description;
 }
