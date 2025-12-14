@@ -15,9 +15,9 @@ server:
     context-path: /learning-service
 
 cloudinary:
-  cloud_name: ${CLOUD_NAME:your_cloud_name}
-  api_key: ${CLOUD_API_KEY:add_your_key}
-  api_secret: ${CLOUD_API_SECRET:add_your_key}
+  cloud_name: ${CLOUD_NAME:dwhlihfnn}
+  api_key: ${CLOUD_API_KEY:649188967252551}
+  api_secret: ${CLOUD_API_SECRET:1wSx5Uul_Be3jt9QAG1xG_kexYA}
 
 app:
   services:

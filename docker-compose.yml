@@ -86,11 +86,17 @@ services:
     depends_on:
       - postgres-userservice
     environment:
-      - CONNECTION_URL=jdbc:postgresql://postgres-userservice:5432/userservice
-      - CONNECTION_USERNAME=dbowner
-      - CONNECTION_PASSWORD=dbowner
+      - DB_CONNECTION_URL=jdbc:postgresql://postgres-userservice:5432/userservice
+      - DB_CONNECTION_USERNAME=dbowner
+      - DB_CONNECTION_PASSWORD=dbowner
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - MAIL_USERNAME=hnguyenphuong09@gmail.com
+      - MAIL_PASSWORD=igtl judw itoi lpnw
+      - SIGNER_KEY=t47lu0FHQY5XHLeC5uViwOtAuzBT0cpkFdDgWZfrRHF1Y2e6XB2oVVRHzKyb/9Fa
+      - CLOUD_NAME=dwhlihfnn
+      - CLOUD_API_KEY=649188967252551
+      - CLOUD_API_SECRET=1wSx5Uul_Be3jt9QAG1xG_kexYA
     ports:
       - "8081:8080"
 
@@ -102,9 +108,13 @@ services:
       - postgres-contentservice
       - redis
     environment:
-      - CONNECTION_URL=jdbc:postgresql://postgres-contentservice:5432/contentservice
-      - CONNECTION_USERNAME=dbowner
-      - CONNECTION_PASSWORD=dbowner
+      - DB_CONNECTION_URL=jdbc:postgresql://postgres-contentservice:5432/contentservice
+      - DB_CONNECTION_USERNAME=dbowner
+      - DB_CONNECTION_PASSWORD=dbowner
+      - CLOUD_NAME=dwhlihfnn
+      - CLOUD_API_KEY=649188967252551
+      - CLOUD_API_SECRET=1wSx5Uul_Be3jt9QAG1xG_kexYA
+      - AGENT_SERVICE_URL=http://agent-service:5000
     ports:
       - "8082:8082"
 
@@ -116,11 +126,31 @@ services:
       - postgres-learningservice
       - redis
     environment:
-      - CONNECTION_URL=jdbc:postgresql://postgres-learningservice:5432/learningservice
-      - CONNECTION_USERNAME=dbowner
-      - CONNECTION_PASSWORD=dbowner
+      - DB_CONNECTION_URL=jdbc:postgresql://postgres-learningservice:5432/learningservice
+      - DB_CONNECTION_USERNAME=dbowner
+      - DB_CONNECTION_PASSWORD=dbowner
+      - CLOUD_NAME=dwhlihfnn
+      - CLOUD_API_KEY=649188967252551
+      - CLOUD_API_SECRET=1wSx5Uul_Be3jt9QAG1xG_kexYA
+      - USER_SERVICE_URL=http://user-service:8081
+      - CONTENT_SERVICE_URL=http://content-service:8082
+      - LEARNING_SERVICE_URL=http://learning-service:8083
     ports:
       - "8083:8083"
+
+  agent-service:
+    image: phuongnbp/agent-service:latest
+    container_name: agent-service
+    restart: always
+    depends_on:
+      - qdrant
+    environment:
+      - VECTOR_DB_HOST=qdrant
+      - GOOGLE_API_KEY=AIzaSyDdNkzxGrXRUhoJy-FkxK3LlZnX7M223XY
+    ports:
+      - "5000:5000"
+    volumes:
+      - agent_service_data:/data
 
   api-gateway:
     build: ./api-gateway
@@ -146,3 +176,4 @@ volumes:
   postgres_learning_data:
   redis_data:
   qdrant_storage:
+  agent_service_data:
