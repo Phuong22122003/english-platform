@@ -24,7 +24,7 @@ import com.english.learning_service.repository.PlanDetailRepository;
 import com.english.learning_service.repository.PlanGroupRepository;
 import com.english.learning_service.repository.PlanRepository;
 import com.english.learning_service.service.PlanService;
-import com.english.learning_service.util.JwtUtils;
+import com.english.learning_service.utilities.JwtUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.Data;

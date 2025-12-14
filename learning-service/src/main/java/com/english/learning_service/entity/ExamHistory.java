@@ -39,4 +39,7 @@ public class ExamHistory {
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
+    private String name;
+
+    private Integer duration;
 }

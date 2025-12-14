@@ -576,7 +576,7 @@ public class VocabularyServiceImpl implements VocabularyService {
             return addTest(topicId, request, imageFiles);
 
         } catch (Exception e) {
-            throw new RuntimeException("Error reading Excel: " + e.getMessage(), e);
+            throw new BadRequestException("Error reading Excel");
         }
     }
 

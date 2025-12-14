@@ -1,4 +1,4 @@
-package com.english.learning_service.util;
+package com.english.learning_service.utilities;
 
 import com.nimbusds.jwt.SignedJWT;
 

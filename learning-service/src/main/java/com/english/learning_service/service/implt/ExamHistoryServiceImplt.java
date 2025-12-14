@@ -59,6 +59,72 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
         ExamHistory examHistory = examHistoryMapper.toExamHistory(request);
 
         examHistory.setUserId(userId);
+
+        Map<String,QuestionResponse> questionMap = new HashMap<>();
+        switch (request.getTestType()){
+            case ItemTypeEnum.VOCABULARY -> {
+                GetVocabularyTestQuestionResponse vocab = vocabularyClient.getTestQuestionsByTestId(examHistory.getTestId());
+                examHistory.setName(vocab.getTestName());
+                examHistory.setDuration(vocab.getDuration());
+                for(var q: vocab.getQuestions()){
+                    questionMap.put(q.getId(),QuestionResponse.builder()
+                            .options(q.getOptions())
+                            .correctAnswer(q.getCorrectAnswer())
+                            .question(q.getQuestion())
+                            .imageUrl(q.getImageUrl())
+                            .explanation(q.getExplaination())
+                            .build());
+                }
+                break;
+            }
+            case ItemTypeEnum.GRAMMAR -> {
+                GetGrammarTestQuestionsByTestIdResponse grammar = grammarClient.getTestQuestionsByTestId(examHistory.getTestId());
+                examHistory.setName(grammar.getTestName());
+                examHistory.setDuration(grammar.getDuration());
+                for(var q: grammar.getGrammarTestQuestions()){
+                    questionMap.put(q.getId(),QuestionResponse.builder()
+                            .options(q.getOptions())
+                            .correctAnswer(q.getCorrectAnswer())
+                            .question(q.getQuestion())
+                            .explanation(q.getExplaination())
+                            .build());
+                }
+                break;
+            }
+            case ItemTypeEnum.LISTENING -> {
+                com.english.learning_service.dto.response.ListeningTestReponse listening = listeningClient.getTestDetail(examHistory.getTestId());
+                examHistory.setName(listening.getName());
+                examHistory.setDuration(listening.getDuration());
+                for(var q: listening.getQuestions()){
+                    questionMap.put(q.getId(),QuestionResponse.builder()
+                            .options(q.getOptions())
+                            .correctAnswer(q.getCorrectAnswer())
+                            .question(q.getQuestion())
+                            .audioUrl(q.getAudioUrl())
+                            .imageUrl(q.getImageUrl())
+                            .explanation(q.getExplaination())
+                            .build());
+                }
+                break;
+            }
+            case ItemTypeEnum.FULL_TEST -> {
+                ToeicTestResponse toeic = toeicClient.getTestDetail(examHistory.getTestId());
+                examHistory.setName(toeic.getName());
+                examHistory.setDuration(200);
+                for(var q: toeic.getQuestions()){
+                    questionMap.put(q.getId(),QuestionResponse.builder()
+                            .options(q.getOptions())
+                            .correctAnswer(q.getCorrectAnswer())
+                            .question(q.getQuestion())
+                            .audioUrl(q.getAudioUrl())
+                            .imageUrl(q.getImageUrl())
+                            .explanation(q.getExplanation())
+                            .part(q.getPart())
+                            .build());
+                }
+            }
+        }
+
         ExamHistory savedEntity = examHistoryRepository.save(examHistory);
         List<UserAnswer> userAnswers = new LinkedList<>();
         for (UserAnswerRequest ua: request.getAnswers()) {
@@ -70,6 +136,15 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                     .questionId(ua.getQuestionId())
                     .part(ua.getPart())
                     .build();
+            QuestionResponse q = questionMap.get(ua.getQuestionId());
+            if(q!=null){
+                userAnswer.setQuestion(q.getQuestion());
+                userAnswer.setOptions(q.getOptions());
+                userAnswer.setCorrectAnswer(q.getCorrectAnswer());
+                userAnswer.setExplanation(q.getExplanation());
+                userAnswer.setAudioUrl(q.getAudioUrl());
+                userAnswer.setImageUrl(q.getImageUrl());
+            }
             userAnswers.add(userAnswer);
         }
         userAnswerRepository.saveAll(userAnswers);
@@ -133,9 +208,15 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
         }
 
         List<ExamHistoryResponse> examHistoryResponses = examHistoryMapper.toExamHistoryResponses(histories.getContent());
+        examHistoryResponses.removeIf(
+                h -> idToTest.get(h.getTestId()) == null
+        );
         for(var h: examHistoryResponses){
             Object test = idToTest.get(h.getTestId());
-            if(test==null) continue;//topic is deleted
+            //topic is deleted
+            if(test==null){
+                continue;
+            }
             if(h.getTestType().equals(ItemTypeEnum.VOCABULARY)){
                 var vocab = (VocabularyTestResponse) test;
                 h.setDuration(vocab.getDuration());
@@ -164,79 +245,17 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
         ExamHistory examHistory = examHistoryRepository.findById(examHistoryId).orElseThrow(()-> new NotFoundException("Exam history not found"));
         ExamHistoryResponse examHistoryResponse = examHistoryMapper.toExamHistoryResponse(examHistory);
         List<UserAnswer> userAnswers = userAnswerRepository.findByExamHistoryId(examHistoryId);
-        Map<String,UserAnswer> idToAnswer = new HashMap<>();
-        for(var answer: userAnswers){
-            idToAnswer.put(answer.getQuestionId(),answer);
-        }
+
         List<QuestionResponse> questions = new ArrayList<>();
-        switch (examHistory.getTestType()){
-            case ItemTypeEnum.VOCABULARY -> {
-                GetVocabularyTestQuestionResponse vocab = vocabularyClient.getTestQuestionsByTestId(examHistory.getTestId());
-                System.out.println(vocab);
-                examHistoryResponse.setName(vocab.getTestName());
-                examHistoryResponse.setDuration(vocab.getDuration());
-                for(var q: vocab.getQuestions()){
-                    questions.add(QuestionResponse.builder()
-                                    .options(q.getOptions())
-                                    .correctAnswer(q.getCorrectAnswer())
-                                    .questionOrder(q.getQuestionOrder())
-                                    .userAnswer(Common.getSafe(() -> idToAnswer.get(q.getId()).getSelectedAnswer(), null))
-                                    .question(q.getQuestion())
-                                    .explanation(q.getExplaination())
-                            .build());
-                }
-                break;
-            }
-            case ItemTypeEnum.GRAMMAR -> {
-                GetGrammarTestQuestionsByTestIdResponse grammar = grammarClient.getTestQuestionsByTestId(examHistory.getTestId());
-                examHistoryResponse.setName(grammar.getTestName());
-                examHistoryResponse.setDuration(grammar.getDuration());
-                for(var q: grammar.getGrammarTestQuestions()){
-                    questions.add(QuestionResponse.builder()
-                            .options(q.getOptions())
-                            .correctAnswer(q.getCorrectAnswer())
-                            .questionOrder(q.getQuestionOrder())
-                            .userAnswer(Common.getSafe(() -> idToAnswer.get(q.getId()).getSelectedAnswer(), null))
-                            .question(q.getQuestion())
-                                    .explanation(q.getExplaination())
-                            .build());
-                }
-                break;
-            }
-            case ItemTypeEnum.LISTENING -> {
-                com.english.learning_service.dto.response.ListeningTestReponse listening = listeningClient.getTestDetail(examHistory.getTestId());
-                examHistoryResponse.setName(listening.getName());
-                examHistoryResponse.setDuration(listening.getDuration());
-                for(var q: listening.getQuestions()){
-                    questions.add(QuestionResponse.builder()
-                            .options(q.getOptions())
-                            .correctAnswer(q.getCorrectAnswer())
-                            .questionOrder(q.getQuestionOrder())
-                            .userAnswer(Common.getSafe(() -> idToAnswer.get(q.getId()).getSelectedAnswer(), null))
-                            .question(q.getQuestion())
-                            .audioUrl(q.getAudioUrl())
-                            .explanation(q.getExplaination())
-                            .build());
-                }
-            }
-            case ItemTypeEnum.FULL_TEST -> {
-                ToeicTestResponse toeic = toeicClient.getTestDetail(examHistory.getTestId());
-                examHistoryResponse.setName(toeic.getName());
-                examHistoryResponse.setDuration(200);
-                for(var q: toeic.getQuestions()){
-                    questions.add(QuestionResponse.builder()
-                            .options(q.getOptions())
-                            .correctAnswer(q.getCorrectAnswer())
-                            .userAnswer(Common.getSafe(() -> idToAnswer.get(q.getId()).getSelectedAnswer(), null))
-                            .question(q.getQuestion())
-                            .audioUrl(q.getAudioUrl())
-                            .imageUrl(q.getImageUrl())
-                            .explanation(q.getExplanation())
-                            .part(q.getPart())
-                            .build());
-                }
-            }
-        }
+        userAnswers.forEach(a->{
+            questions.add(QuestionResponse.builder()
+                    .options(a.getOptions())
+                    .correctAnswer(a.getCorrectAnswer())
+                    .userAnswer(a.getSelectedAnswer())
+                    .question(a.getQuestion())
+                    .explanation(a.getExplanation())
+                    .build());
+        });
         examHistoryResponse.setQuestions(questions);
         return examHistoryResponse;
     }
