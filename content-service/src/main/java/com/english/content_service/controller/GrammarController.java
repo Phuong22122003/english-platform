@@ -110,7 +110,11 @@ public class GrammarController {
                                      @RequestBody GrammarTestRequest testRequest) {
         return ResponseEntity.ok(grammarService.addTest(grammarId, testRequest));
     }
-
+    @PostMapping("/topics/{grammar_id}/file-tests")
+    public ResponseEntity<?> addTestByExcelFile(@PathVariable("grammar_id") String grammarId,
+                                                @RequestPart("test_file") MultipartFile excelFile) {
+        return ResponseEntity.ok(grammarService.addTest(grammarId, excelFile));
+    }
     @PutMapping("/tests/{test_id}")
     public ResponseEntity<?> updateGrammarTest(@PathVariable("test_id") String testId,
                                                @RequestBody GrammarTestRequest request) {

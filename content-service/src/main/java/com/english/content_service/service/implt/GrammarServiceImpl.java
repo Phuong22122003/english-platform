@@ -319,6 +319,12 @@ public class GrammarServiceImpl implements GrammarService {
 
     @Override
     @Transactional
+    /**
+     * Excel format:
+     * | name | test1 |
+     * | duration | 10 |
+     * | question | optionA | optionB | optionC | optionD | correctAnswer | explanation  |
+     */
     public GrammarTestResponse addTest(String grammarId, MultipartFile excelFile) {
         try (InputStream is = excelFile.getInputStream();
              Workbook workbook = new XSSFWorkbook(is)) {
