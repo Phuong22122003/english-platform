@@ -269,6 +269,7 @@ public class GrammarServiceImpl implements GrammarService {
                 .topic(topic)
                 .createdAt(LocalDateTime.now())
                 .build();
+        grammarRepository.save(grammar);
         return grammarMapper.toGrammarResponse(grammar);
     }
 
@@ -307,6 +308,7 @@ public class GrammarServiceImpl implements GrammarService {
         test = grammarTestRepository.save(test);
         List<GrammarTestQuestion> questions = grammarMapper.toGrammarTestQuestion(request.getQuestions());
         for(var question: questions){
+            question.setId(null);
             question.setTest(test);
         }
         grammarTestQuestionRepository.saveAll(questions);

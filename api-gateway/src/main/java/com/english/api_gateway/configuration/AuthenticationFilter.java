@@ -33,6 +33,9 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     String[] publicEndPoints = {
             "/user-service/authenticate/signup",
             "/user-service/authenticate/login",
+            "/user-service/authenticate/password/otp",
+            "/user-service/authenticate/password/otp/validation",
+            "/user-service/authenticate/password/resets",
             "/learning-service/plan/agent-generation"
     };
 

@@ -503,6 +503,10 @@ public class ListeningServiceImpl implements ListeningService {
             // 4. lưu toàn bộ question
             // (bạn cần repository riêng cho ListeningTestQuestion, giống VocabularyTestQuestionRepository)
             // giả sử tên repo là listeningTestQuestionRepository
+            for (var q : questions) {
+                q.setId(null);
+                q.setTest(test);
+            }
             questions = listeningTestQuestionRepository.saveAll(questions);
 
         } catch (Exception e) {
