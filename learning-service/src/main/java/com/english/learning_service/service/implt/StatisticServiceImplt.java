@@ -8,6 +8,11 @@ import com.english.learning_service.entity.ExamHistory;
 import com.english.learning_service.enums.ItemTypeEnum;
 import com.english.learning_service.repository.ExamHistoryRepository;
 import com.english.learning_service.service.StatisticService;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -20,7 +25,11 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@Data
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class StatisticServiceImplt implements StatisticService {
     ExamHistoryRepository examHistoryRepository;
 
