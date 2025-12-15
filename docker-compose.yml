@@ -5,7 +5,7 @@ services:
   # 🗄 DATABASE SERVICES
   # =========================
   postgres-userservice:
-    image: postgres
+    image: postgres:16
     container_name: postgres-userservice
     restart: always
     environment:
@@ -21,7 +21,7 @@ services:
     command: ["postgres", "-c", "timezone=Asia/Ho_Chi_Minh"]
 
   postgres-contentservice:
-    image: postgres
+    image: postgres:16
     container_name: postgres-contentservice
     restart: always
     environment:
@@ -37,7 +37,7 @@ services:
     command: ["postgres", "-c", "timezone=Asia/Ho_Chi_Minh"]
 
   postgres-learningservice:
-    image: postgres
+    image: postgres:16
     container_name: postgres-learningservice
     restart: always
     environment:

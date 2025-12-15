@@ -5,8 +5,11 @@ import com.english.enums.TimeRange;
 import com.english.enums.TopicType;
 import com.english.learning_service.dto.response.UserScore;
 import com.english.learning_service.entity.ExamHistory;
+import com.english.learning_service.enums.ItemTypeEnum;
 import com.english.learning_service.repository.ExamHistoryRepository;
 import com.english.learning_service.service.StatisticService;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,13 +24,31 @@ import java.util.stream.Collectors;
 public class StatisticServiceImplt implements StatisticService {
     ExamHistoryRepository examHistoryRepository;
 
+    private boolean isAdmin(){
+        List<String> roles = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+        for(String role: roles){
+            if(role.toUpperCase().equals("ROLE_ADMIN")){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Get the total number of tests taken within a time range
     @Override
     public StatisticResponse getNumberOfTestIsTaken(TimeRange timeRange) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate;
         LocalDateTime endDate = now;
 
-        // 🧭 1️⃣ Xác định khoảng thời gian bắt đầu
+        // Xác định khoảng thời gian bắt đầu
         switch (timeRange) {
             case TODAY -> startDate = now.toLocalDate().atStartOfDay();
             case ONE_WEEK -> startDate = now.minusWeeks(1).toLocalDate().atStartOfDay();
@@ -36,11 +57,13 @@ public class StatisticServiceImplt implements StatisticService {
             default -> throw new IllegalArgumentException("Invalid time range: " + timeRange);
         }
 
-        // 🧭 2️⃣ Lấy danh sách bài test được làm trong khoảng thời gian đó
+        // Lấy danh sách bài test được làm trong khoảng thời gian đó
         List<ExamHistory> examHistories =
-                examHistoryRepository.findByTakenAtBetween(startDate, endDate);
+                isAdmin()
+                        ?examHistoryRepository.findByUserIdAndTakenAtBetween(userId,startDate,endDate)
+                        :examHistoryRepository.findByTakenAtBetween(startDate, endDate);
 
-        // 🧭 3️⃣ Group dữ liệu theo mốc thời gian phù hợp
+        // Group dữ liệu theo mốc thời gian phù hợp
         Map<String, Integer> groupedData;
         DateTimeFormatter formatter;
 
@@ -75,10 +98,10 @@ public class StatisticServiceImplt implements StatisticService {
             default -> throw new IllegalArgumentException("Invalid time range: " + timeRange);
         }
 
-        // 🧭 4️⃣ Tổng số bài test được làm trong time range
+        // Tổng số bài test được làm trong time range
         int totalTestsTaken = examHistories.size();
 
-        // 🧭 5️⃣ Trả về DTO
+        // Trả về DTO
         StatisticResponse response = new StatisticResponse();
         response.setTotalCount(totalTestsTaken);
         response.setNewElementsByPeriod(groupedData);
@@ -87,12 +110,14 @@ public class StatisticServiceImplt implements StatisticService {
     }
 
     @Override
-    public UserScore getUserScores(TimeRange timeRange, TopicType topicType) {
+    public UserScore getUserScores(TimeRange timeRange, ItemTypeEnum filterType) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate;
         LocalDateTime endDate = now;
 
-        // 1️⃣ Xác định khoảng thời gian
+        // Xác định khoảng thời gian
         switch (timeRange) {
             case TODAY -> startDate = now.toLocalDate().atStartOfDay();
             case ONE_WEEK -> startDate = now.minusWeeks(1).toLocalDate().atStartOfDay();
@@ -101,18 +126,20 @@ public class StatisticServiceImplt implements StatisticService {
             default -> throw new IllegalArgumentException("Invalid time range: " + timeRange);
         }
 
-        // 2️⃣ Lấy dữ liệu trong khoảng thời gian đó
+        // Lấy dữ liệu trong khoảng thời gian đó
         List<ExamHistory> examHistories =
-                examHistoryRepository.findByTakenAtBetween(startDate, endDate);
+                isAdmin()
+                        ?examHistoryRepository.findByUserIdAndTakenAtBetween(userId,startDate,endDate)
+                        :examHistoryRepository.findByTakenAtBetween(startDate, endDate);
 
-        // 3️⃣ Nếu có lọc theo topicType
-        if (topicType != null) {
+        // Nếu có lọc theo topicType
+        if (filterType != null) {
             examHistories = examHistories.stream()
-                    .filter(e -> e.getTestType().name().equalsIgnoreCase(topicType.name()))
+                    .filter(e -> e.getTestType()==filterType)
                     .collect(Collectors.toList());
         }
 
-        // 4️⃣ Nhóm dữ liệu và tính trung bình điểm
+        // Nhóm dữ liệu và tính trung bình điểm
         Map<String, Float> groupedScores;
         DateTimeFormatter formatter;
 
@@ -159,7 +186,7 @@ public class StatisticServiceImplt implements StatisticService {
             default -> throw new IllegalArgumentException("Invalid time range: " + timeRange);
         }
 
-        // 5️⃣ Tạo DTO trả về
+        // Tạo DTO trả về
         UserScore response = new UserScore();
         response.setScores(groupedScores);
 

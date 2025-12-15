@@ -164,75 +164,10 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
         else{
             histories = examHistoryRepository.findByUserIdAndTestType(userId,ItemTypeEnum.map(filterType),pageable);
         }
-
-
-        List<String> grammarIds = new ArrayList<>();
-        List<String> listeningIds = new ArrayList<>();
-        List<String> vocabIds = new ArrayList<>();
-        List<String> toeicIds = new ArrayList<>();
-        for(ExamHistory history: histories.getContent()){
-            if(history.getTestType().equals(ItemTypeEnum.GRAMMAR)){
-                grammarIds.add(history.getTestId());
-            } else if (history.getTestType().equals(ItemTypeEnum.LISTENING)) {
-                listeningIds.add(history.getTestId());
-            } else if (history.getTestType().equals(ItemTypeEnum.VOCABULARY)) {
-                vocabIds.add(history.getTestId());
-            } else if (history.getTestType().equals(ItemTypeEnum.FULL_TEST)) {
-                toeicIds.add(history.getTestId());
-            }
-        }
-        Map<String, Object> idToTest = new HashMap<>();
-        if(!vocabIds.isEmpty()){
-            List<VocabularyTestResponse> vocabularyResponses = vocabularyClient.getTestsByIds(vocabIds);
-            for(var vocab: vocabularyResponses){
-                idToTest.put(vocab.getId(),vocab);
-            }
-        }
-        if(!grammarIds.isEmpty()){
-            List<GrammarTestResponse> grammarTestResponses = grammarClient.getTestsByIds(grammarIds);
-            for(var grammar: grammarTestResponses){
-                idToTest.put(grammar.getId(),grammar);
-            }
-        }
-        if(!listeningIds.isEmpty()){
-            List<ListeningTestReponse> listeningTestResponses = listeningClient.getTestsByIds(listeningIds);
-            for(var listening: listeningTestResponses){
-                idToTest.put(listening.getId(),listening);
-            }
-        }
-        if(!toeicIds.isEmpty()){
-            List<ToeicTestResponse> toeicTestResponses = toeicClient.getTestsByIds(toeicIds);
-            for(var toeic: toeicTestResponses){
-                idToTest.put(toeic.getId(),toeic);
-            }
-        }
-
         List<ExamHistoryResponse> examHistoryResponses = examHistoryMapper.toExamHistoryResponses(histories.getContent());
-        examHistoryResponses.removeIf(
-                h -> idToTest.get(h.getTestId()) == null
-        );
         for(var h: examHistoryResponses){
-            Object test = idToTest.get(h.getTestId());
-            //topic is deleted
-            if(test==null){
-                continue;
-            }
-            if(h.getTestType().equals(ItemTypeEnum.VOCABULARY)){
-                var vocab = (VocabularyTestResponse) test;
-                h.setDuration(vocab.getDuration());
-                h.setName(vocab.getName());
-            }else if(h.getTestType().equals(ItemTypeEnum.GRAMMAR)){
-                var grammar = (GrammarTestResponse) test;
-                h.setDuration(grammar.getDuration());
-                h.setName(grammar.getName());
-            }else if(h.getTestType().equals(ItemTypeEnum.LISTENING)){
-                var listening = (ListeningTestReponse) test;
-                h.setDuration(listening.getDuration());
-                h.setName(listening.getName());
-            } else if (h.getTestType().equals(ItemTypeEnum.FULL_TEST)) {
-                var toeic = (ToeicTestResponse) test;
+            if (h.getTestType().equals(ItemTypeEnum.FULL_TEST)) {
                 h.setDuration(200);
-                h.setName(toeic.getName());
             }
         }
         return new PageImpl<>(examHistoryResponses,histories.getPageable(),histories.getTotalElements());

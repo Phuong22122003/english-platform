@@ -5,6 +5,7 @@ import com.english.dto.response.ApiResponse;
 import com.english.exception.AppException;
 import com.english.exception.BadRequestException;
 import com.english.exception.NotFoundException;
+import com.english.exception.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +44,7 @@ public class GlobalExceptionHandler {
                         .build());
     }
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    @ExceptionHandler(NotFoundException.class)
+    @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiResponse<?>> handlerUnauthorizedException(NotFoundException ex){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 ApiResponse.builder()

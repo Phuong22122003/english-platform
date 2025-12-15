@@ -2,6 +2,8 @@ package com.english.learning_service.controller;
 
 import com.english.dto.response.StatisticResponse;
 import com.english.enums.TimeRange;
+import com.english.learning_service.dto.response.UserScore;
+import com.english.learning_service.enums.ItemTypeEnum;
 import com.english.learning_service.service.StatisticService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -22,5 +24,8 @@ public class StatisticController {
     public ResponseEntity<StatisticResponse> getNumberOfTakenTest(@RequestParam("time_range") TimeRange timeRange){
         return ResponseEntity.ok().body(statisticService.getNumberOfTestIsTaken(timeRange));
     }
-
+    @GetMapping("/scores")
+    public ResponseEntity<UserScore> getUserScores(@RequestParam("time_range") TimeRange timeRange, @RequestParam("filter_type")ItemTypeEnum filterType){
+        return ResponseEntity.ok().body(statisticService.getUserScores(timeRange,filterType));
+    }
 }

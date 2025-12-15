@@ -16,4 +16,5 @@ public interface ExamHistoryRepository extends JpaRepository<ExamHistory, String
     public Page<ExamHistory> findByUserIdAndTestType(String userId, ItemTypeEnum testType, Pageable pageable);
     List<ExamHistory> findTop5ByUserIdOrderByTakenAtDesc(String userId);
     List<ExamHistory> findByTakenAtBetween(LocalDateTime start, LocalDateTime end);
+    List<ExamHistory> findByUserIdAndTakenAtBetween(String userId,LocalDateTime start, LocalDateTime end);
 }

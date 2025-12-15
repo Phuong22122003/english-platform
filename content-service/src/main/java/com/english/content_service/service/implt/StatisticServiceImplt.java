@@ -101,6 +101,9 @@ public class StatisticServiceImplt implements StatisticService {
         return response;
     }
 
+    /*
+    *  Get top n topics with the most views
+    * */
     @Override
     public List<TopicViewSummaryResponse> getTopNTopics(int n) {
         List<TopicViewSummary> topicViewSummaries = topicViewStatisticRepository.findTopTopics(PageRequest.of(0, n));
