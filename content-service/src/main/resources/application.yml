@@ -1,6 +1,10 @@
 spring:
   application:
     name: content-service
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
   flyway:
     enabled: true
     locations: classpath:db/migration

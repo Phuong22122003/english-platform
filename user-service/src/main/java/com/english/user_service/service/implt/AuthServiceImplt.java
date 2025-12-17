@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import com.english.dto.request.MailRequest;
+import com.english.exception.UnauthorizedException;
 import com.english.service.EmailService;
 import com.english.user_service.dto.request.*;
 import com.english.user_service.dto.response.VerifyOtpResponse;
@@ -102,7 +103,7 @@ public class AuthServiceImplt implements AuthenticationService {
         boolean verified = signedJWT.verify(verifier);
         boolean result = verified && expiryTime.after(new Date());
         if (!result) {
-            throw new RuntimeException("Unauthorize");
+            throw new UnauthorizedException("Unauthorize");
         }
         return signedJWT;
     }
@@ -112,11 +113,11 @@ public class AuthServiceImplt implements AuthenticationService {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String username = request.getUsername();
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
         String password = request.getPassword();
         boolean authenticated = passwordEncoder.matches(password, user.getPassword());
         if (!authenticated) {
-            throw new RuntimeException("Invalid credentials");
+            throw new UnauthorizedException("Invalid credentials");
         }
         String token = generateToken(user);
 

@@ -16,7 +16,7 @@ server:
     servlet:
         context-path: /user-service
 jwt:
-    signerKey: ${SIGNER_KEY:add_your_key}
+    signerKey: ${SIGNER_KEY:t47lu0FHQY5XHLeC5uViwOtAuzBT0cpkFdDgWZfrRHF1Y2e6XB2oVVRHzKyb/9Fa}
     refreshable-duration: 2764800 # in second
     valid-duration: 2764800 # in second
 

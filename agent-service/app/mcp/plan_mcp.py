@@ -144,7 +144,62 @@ def get_plan_detail_prompt(group, plan, topics, existTopic) -> str:
     """
     return prompt
 
+@mcp.prompt()
+def get_vocab_topic_prompt(description:str) ->str:
+    return f'''You are an AI assistant that generates English vocabulary topics for learners.
 
+    INPUT:
+    - topic_description: "{description}"
+
+    TASK:
+    Based on the given topic_description, think of a suitable vocabulary topic and generate vocabulary data.
+
+    REQUIREMENTS:
+    1. This is a VOCABULARY topic for learning English.
+    2. You must decide an appropriate topic name and description based on the input.
+    3. Choose a suitable level from: BEGINNER, INTERMEDIATE, ADVANCED.
+    4. Generate a list of vocabulary words related to the topic.
+    5. Each vocabulary item MUST follow EXACTLY this header order:
+
+    [
+        "word",
+        "phonetic (IPA)",
+        "meaning",
+        "example",
+        "exampleMeaning",
+        "imageName",
+        "audioName"
+    ]
+
+    6. imageName must be "{{word}}.jpg"
+    7. audioName must be "{{word}}.mp3"
+    8. Use simple, clear English meanings and examples suitable for the selected level.
+    9. Do NOT add any extra text, explanation, or markdown.
+    10. The response MUST be a valid JSON-like object in the exact format below.
+
+    RESPONSE FORMAT (STRICT):
+    {{
+    name: "<topic name>",
+    description: "<short description of this vocabulary topic>",
+    level: "BEGINNER | INTERMEDIATE | ADVANCED",
+    vocab: [
+        [
+        "word",
+        "/ipa/",
+        "meaning",
+        "example sentence.",
+        "example meaning explanation.",
+        "word.jpg",
+        "word.mp3"
+        ]
+    ]
+    }}
+
+    IMPORTANT:
+    - Return ONLY the object.
+    - Do NOT wrap the response in markdown.
+    - Do NOT explain anything.
+'''
 @mcp.tool()
 def get_current_time(timezone: str = "Asia/Ho_Chi_Minh") -> str:
     """Return the current system time in ISO format for a given timezone."""

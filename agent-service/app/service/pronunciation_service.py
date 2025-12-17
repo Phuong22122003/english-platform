@@ -26,10 +26,6 @@ class PronunciationService:
         ipa_correct_tokens = list(ipa_correct)
         ipa_correct_tokens = [i for i in ipa_correct_tokens if i!=' ']
         
-        print(f"Text: {text_correct}")
-        print(f"IPA correct: {ipa_correct}")
-        print(f"Tokens correct: {ipa_correct_tokens}\n")
-        
         # ====== 2. Load và predict audio ======
         speech_array, sampling_rate = np.array(audio_array), sample_rate
         speech_array = torch.from_numpy(speech_array).float()
@@ -73,9 +69,7 @@ class PronunciationService:
         )
         
         if alignment_result is None:
-            print("LLM determined sequences are too different. Cannot align.\n")
             correct_ipa = ipa.convert(text_correct)
-            print(f'corrrect ipa {correct_ipa}')
             ipa_li = list(correct_ipa)
             detail_scores = []
             total = 0.0
@@ -88,12 +82,6 @@ class PronunciationService:
                     'ipa': correct_ipa,
                     'detail_scores': detail_scores
                 }
-        
-        print(f"LLM Analysis:")
-        print(f"  - Similarity: {alignment_result['similarity_percent']}%")
-        print(f"  - Can align: {alignment_result['can_align']}")
-        print(f"  - Alignment map: {alignment_result['alignment']}\n")
-        
         # ====== 5. Tính confidence dựa trên LLM alignment ======
         results = []
         
@@ -152,21 +140,15 @@ class PronunciationService:
                 })
                 
                 status = "MATCH" if matched else f"✗ ({predicted_display})"
-                print(f"{correct_char:>5s} → {status:>12s} (confidence: {conf*100:.2f}%)")
         
         # ====== 6. Summary ======
         avg_confidence = np.mean([r['confidence'] for r in results])
         match_rate = sum(r['matched'] for r in results) / len(results)
         
-        print(f"\n{'='*50}")
-        print(f"Average confidence: {avg_confidence:.2f}%")
-        print(f"Match rate: {sum(r['matched'] for r in results)}/{len(results)} ({match_rate*100:.1f}%)")
-                
-        
+       
         # ====== 7. return result ====
                 
         correct_ipa = ipa.convert(text_correct)
-        print(f'corrrect ipa {correct_ipa}')
         ipa_li = list(correct_ipa)
         detail_scores = []
         total = 0.0
@@ -179,7 +161,7 @@ class PronunciationService:
                 'ipa': correct_ipa,
                 'detail_scores': detail_scores
             }
-        print('Len==============================',len(ipa_li),len(results))
+            
         i = 0
         for ipa_char in ipa_li:
             if ipa_char in [' ', "ˈ", 'ˌ']:

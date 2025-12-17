@@ -9,3 +9,7 @@ async def create_plan(user_info: dict):
     print("Creating plan...", user_info)
     await agent_service.invoke({"user_info": user_info})
     return JSONResponse({"message": "Plan created successfully"})
+@router.post("/topics")
+async def create_topic(topic_type, description:str):
+    await agent_service.create_topic(topic_type,description)
+    return 'oke'

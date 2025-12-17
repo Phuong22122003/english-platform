@@ -17,3 +17,5 @@ gtts
 pydub
 fastmcp
 pytz
+openpyxl
+icrawler
