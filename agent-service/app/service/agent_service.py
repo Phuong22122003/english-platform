@@ -1,6 +1,7 @@
 from langgraph.graph import START, StateGraph, END
 from app.schemas.plan import *
 from app.schemas.topic import *
+from app.schemas.test import *
 from langchain.chat_models import init_chat_model
 from .topic_service import topic_service
 import json
@@ -15,12 +16,12 @@ from gtts import gTTS
 import shutil
 from icrawler.builtin import BingImageCrawler
 from PIL import Image
+import requests
+from fastapi.responses import JSONResponse
 if not os.environ.get("GOOGLE_API_KEY"):
   os.environ["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
-import requests
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MCP_PATH = os.path.join(BASE_DIR, "mcp", "plan_mcp.py")
-
 class MCPClientHolder:
     _client = None
 
@@ -42,16 +43,7 @@ class AgentService:
         self.AUDIO_ROOT = os.path.join(BASE_DIR, "files", "audios")
         self.IMAGE_ROOT = os.path.join(BASE_DIR, "files", "images")
         self.EXCEL_FILE = os.path.join(BASE_DIR, "files", "topic.xlsx")
-        self.VOCAB_HEADERS = [
-            "word",
-            "phonetic (IPA)",
-            "meaning",
-            "example",
-            "exampleMeaning",
-            "imageName",
-            "audioName"
-        ]
-
+        self.VOCAB_HEADERS = ["word","phonetic (IPA)","meaning","example","exampleMeaning","imageName","audioName"]
         # Compile application and test
         graph_builder = StateGraph(Plan)
         graph_builder.add_node(self.plan,'plan')
@@ -75,21 +67,23 @@ class AgentService:
                         shutil.rmtree(file_path)  # xóa folder con
                 except Exception as e:
                     print(f"❌ Không xóa được {file_path}: {e}")
-    async def get_image(self, word, max_size=(300, 300)):
+    async def get_image(self, name, description=None, max_size=(300, 300)):
         save_dir = os.path.join(self.IMAGE_ROOT)
         os.makedirs(save_dir, exist_ok=True)
-
+        if description == None:
+            description = name
+            
         crawler = BingImageCrawler(
             storage={"root_dir": save_dir},
             downloader_threads=1
         )
-        crawler.crawl(keyword=word, max_num=1)
+        crawler.crawl(keyword=description, max_num=1)
 
         files = os.listdir(save_dir)
         if files:
             old = files[0]
             ext = os.path.splitext(old)[1]
-            new_name = f"{word}{ext}"
+            new_name = f"{name}{ext}"
             old_path = os.path.join(save_dir, old)
             new_path = os.path.join(save_dir, new_name)
 
@@ -180,9 +174,95 @@ class AgentService:
             print(response.text)
             for _, f in files:
                 content = f[1]
-                # f[1] = (filename, content, content_type)
                 if isinstance(content, tuple) and hasattr(content[1], "close"):
                     content[1].close()
+            return JSONResponse(
+                status_code=response.status_code,
+                content=response.json()
+            )
+    async def create_test(self,request: TestRequest):
+        await self.clear_directory(self.IMAGE_ROOT)        
+        client = await MCPClientHolder.get_client()
+        prompt = await client.get_prompt("get_vocab_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}'})
+        prompt = prompt.messages[0].content.text
+        # response = self.llm.invoke(prompt)
+        # test = response.content
+        test='''
+{
+  "name": "Trees and Plants Vocabulary",
+  "duration": 3,
+  "questions": [
+    {
+      "word": "sapling",
+      "question": "A young tree that has been recently planted is called a:",
+      "A": "Root",
+      "B": "Sapling",
+      "C": "Canopy",
+      "D": "Trunk",
+      "correctAnswer": "B",
+      "explanation": "A sapling is a young tree, typically one that is small enough to be transplanted."
+    },
+    {
+      "word": "deciduous",
+      "question": "Which word describes trees that lose their leaves seasonally, usually in autumn?",
+      "A": "Evergreen",
+      "B": "Flowering",
+      "C": "Deciduous",
+      "D": "Fruiting",
+      "correctAnswer": "C",
+      "explanation": "Deciduous plants are those that shed their leaves seasonally, as opposed to evergreen plants which retain their leaves year-round."
+    }
+  ]
+}
+'''
+        if test.startswith("```"):
+                test = test.strip("`")       # xóa dấu `
+                test = test.replace("json", "", 1).strip()  # xóa chữ 'json' ở đầu nếu có
+        print(test)
+        test = json.loads(test)
+        test_payload = {}
+        test_payload['name'] = test['name']
+        test_payload['duration'] = test['duration']
+        test_payload['questions'] = []
+        for q in test['questions']:
+            await self.get_image(q['word'])
+            q['imageName'] = f'{q['word']}.jpg'
+            q['explaination'] = q['explanation']
+            q['options'] = {
+                'a': q['A'],
+                'b': q['B'],
+                'c': q['C'],
+                'd': q['D']
+            }
+            test_payload["questions"].append(q)
+        payload = []
+        payload.append(
+                ('test', ('test.json', json.dumps(test_payload), "application/json"))
+        )
+        for filename in os.listdir(self.IMAGE_ROOT): 
+            path = os.path.join(self.IMAGE_ROOT, filename) 
+            if os.path.isfile(path):
+                payload.append( ("images", (filename, open(path, "rb"), "image/jpeg")) )
+                
+        headers = {
+            "Authorization": f"Bearer {settings.JWT}"
+        }
+        response = requests.post(
+            settings.CONTENT_SERVICE_URL + f"/vocabulary/topics/{request.id}/tests",
+            files=payload,
+            headers=headers
+        )
+        print(settings.CONTENT_SERVICE_URL + f"/vocabulary/topics/{request.id}/tests")
+        print(response.text)
+        for _, f in payload:
+            content = f[1]
+            if isinstance(content, tuple) and hasattr(content[1], "close"):
+                content[1].close()
+        return JSONResponse(
+            status_code=response.status_code,
+            content=response.json()
+        )
+        
     async def invoke(self, input_data:dict):
         print("Invoking agent service with input data:", input_data)
         result = await self.graph.ainvoke({'user_info': input_data, 'userId': input_data.get("user_info", "").get("userId", ""), 'level': input_data.get("user_info", "").get("level", "beginner"), 'study_time': input_data.get("user_info", "").get("studyTime", "morning")})

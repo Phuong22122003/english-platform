@@ -145,6 +145,58 @@ def get_plan_detail_prompt(group, plan, topics, existTopic) -> str:
     return prompt
 
 @mcp.prompt()
+def get_vocab_test_creation_prompt(description:str) ->str:
+    return f'''You are an AI assistant specialized in creating English vocabulary quizzes.
+    INPUT:
+    - Description: "{description}"
+
+    TASK:
+    Based on the description above, create a vocabulary quiz for English learners.
+
+    OUTPUT FORMAT:
+    Return a SINGLE JSON OBJECT with EXACTLY this structure:
+
+    {{
+    "name": "string",
+    "duration": number,
+    "questions": [
+        {{
+        "word": "string",
+        "question": "string",
+        "A": "string",
+        "B": "string",
+        "C": "string",
+        "D": "string",
+        "correctAnswer": "A | B | C | D",
+        "explanation": "string"
+        }},
+        ...
+    ]
+    }}
+
+    RULES:
+    1. The quiz is for VOCABULARY learning.
+    2. Questions MUST be diverse, including:
+    - Identifying meaning
+    - Choosing correct usage
+    - Daily-life situations
+    - Distinguishing similar words
+    3. Each question focuses on ONE vocabulary word.
+    4. Only ONE option is correct.
+    5. Explanations must clearly explain the correct answer.
+    6. Estimate the difficulty level based on the description and vocabulary complexity.
+    7. Set "duration" (in minutes) based on difficulty and number of questions:
+    - Beginner: ~1 minute per question
+    - Intermediate: ~1.5 minutes per question
+    - Advanced: ~2 minutes per question
+    8. The "name" should be a clear, meaningful quiz title related to the description.
+    9. Do NOT include markdown, comments, or any text outside the JSON.
+    10. Do NOT wrap the JSON in ```.
+
+    OUTPUT:
+    Return ONLY the JSON object.
+'''
+@mcp.prompt()
 def get_vocab_topic_prompt(description:str) ->str:
     return f'''You are an AI assistant that generates English vocabulary topics for learners.
 
