@@ -115,35 +115,8 @@ class AgentService:
         if topic_type.upper() == 'VOCABULARY':
             prompt = await client.get_prompt("get_vocab_topic_prompt", arguments={"description": description})
             prompt = prompt.messages[0].content.text
-            # response = self.llm.invoke(prompt)
-            # topic = response.content
-            topic = '''
-{
-    "name": "Trees and Plants",
-    "description": "Learn English words for different types of trees, plants, and parts of a plant.",
-    "level": "BEGINNER",
-    "vocab": [
-        [
-            "tree",
-            "/triː/",
-            "A tall plant with a trunk, branches, and leaves.",
-            "A big tree gives us shade.",
-            "Một cái cây lớn cho chúng ta bóng mát.",
-            "tree.jpg",
-            "tree.mp3"
-        ],
-        [
-            "leaf",
-            "/liːf/",
-            "The flat, green part of a plant that grows from a stem or branch.",
-            "The leaves are falling from the tree.",
-            "Những chiếc lá đang rụng khỏi cây.",
-            "leaf.jpg",
-            "leaf.mp3"
-        ]
-    ]
-}
-'''
+            response = self.llm.invoke(prompt)
+            topic = response.content
             if topic.startswith("```"):
                 topic = topic.strip("`")       # xóa dấu `
                 topic = topic.replace("json", "", 1).strip()  # xóa chữ 'json' ở đầu nếu có
