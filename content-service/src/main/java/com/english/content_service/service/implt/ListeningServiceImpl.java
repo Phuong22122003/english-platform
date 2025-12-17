@@ -426,6 +426,7 @@ public class ListeningServiceImpl implements ListeningService {
         if(listening.getPublicImageId()!=null){
             fileService.deleteFile(listening.getPublicImageId());
         }
+        listeningRepository.delete(listening);
     }
 
     @Override
