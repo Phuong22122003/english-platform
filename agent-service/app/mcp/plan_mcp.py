@@ -147,8 +147,7 @@ def get_plan_detail_prompt(group, plan, topics, existTopic) -> str:
 @mcp.prompt()
 def get_vocab_test_creation_prompt(description:str) ->str:
     return f'''You are an AI assistant specialized in creating English vocabulary quizzes.
-    INPUT:
-    - Description: "{description}"
+    INPUT: {description}"
 
     TASK:
     Based on the description above, create a vocabulary quiz for English learners.
@@ -187,14 +186,17 @@ def get_vocab_test_creation_prompt(description:str) ->str:
     4. Only ONE option is correct.
     5. Explanations must clearly explain the correct answer.
     6. Estimate the difficulty level based on the description and vocabulary complexity.
-    7. Set "duration" (in minutes) based on difficulty and number of questions:
-    - Beginner: ~1 minute per question
-    - Intermediate: ~1.5 minutes per question
-    - Advanced: ~2 minutes per question
+    7. DURATION RULE (CRITICAL):
+    - If the user explicitly specifies a duration, you MUST set "duration" to that exact value.
+    - You are NOT allowed to calculate, modify, or override it.
+    - Example: 15 minutes, 30 minutes, etc.
+    - If the user does NOT specify a duration, estimate it based on:
+        + Beginner: ~1 minute per question
+        + Intermediate: ~1.5 minutes per question
+        + Advanced: ~2 minutes per question
     8. The "name" should be a clear, meaningful quiz title related to the description.
     9. Do NOT include markdown, comments, or any text outside the JSON.
     10. Do NOT wrap the JSON in ```.
-    11. If the user requires a specific duration, you MUST use their duration and follow that requirement exactly.
 
     OUTPUT:
     Return ONLY the JSON object.
@@ -203,8 +205,7 @@ def get_vocab_test_creation_prompt(description:str) ->str:
 def get_listening_test_creation_prompt(description: str) -> str:
     return f'''You are an AI assistant that creates English LISTENING comprehension tests.
 
-    INPUT:
-    - Description: "{description}"
+    INPUT: {description}"
 
     TASK:
     Create a LISTENING test for English learners based on the description.
@@ -243,13 +244,16 @@ def get_listening_test_creation_prompt(description: str) -> str:
     3. The transcript is the exact audio content the learner will hear.
     4. The explanation must justify the correct answer using the transcript.
     5. imageName and audioName are required for each question.
-    6. Set "duration" (minutes) by difficulty:
-    - Beginner ~1.5 min/question
-    - Intermediate ~2 min/question
-    - Advanced ~2.5 min/question
+    6. DURATION RULE (CRITICAL):
+    - If the user explicitly specifies a duration, you MUST set "duration" to that exact value.
+    - You are NOT allowed to calculate, modify, or override it.
+    - Example: 15 minutes, 30 minutes, etc.
+    - If the user does NOT specify a duration, estimate it based on:
+        + Beginner: ~1 minute per question
+        + Intermediate: ~1.5 minutes per question
+        + Advanced: ~2 minutes per question
     7. The "name" must match the test topic.
     8. Do NOT include markdown, comments, or any text outside the JSON.
-    9. If a specific duration is required, use it exactly.
 
     OUTPUT:
     Return ONLY the JSON object.
@@ -258,8 +262,7 @@ def get_listening_test_creation_prompt(description: str) -> str:
 def get_grammar_test_creation_prompt(description: str) -> str:
     return f'''You are an AI assistant that creates English GRAMMAR tests.
 
-    INPUT:
-    - Description: "{description}"
+    INPUT: {description}"
 
     TASK:
     Create a GRAMMAR test for English learners based on the description.
@@ -280,7 +283,6 @@ def get_grammar_test_creation_prompt(description: str) -> str:
             "d": "string"
         }},
         "correctAnswer": "a | b | c | d",
-        "questionOrder": number,
         "explanation": "string"
         }}
     ]
@@ -301,13 +303,16 @@ def get_grammar_test_creation_prompt(description: str) -> str:
     6. Options must be grammatically plausible.
     7. The explanation must clearly explain why the correct answer is correct.
     8. questionOrder MUST start from 1 and increase sequentially.
-    9. Set "duration" (minutes) by difficulty:
-    - Beginner ~1 min/question
-    - Intermediate ~1.5 min/question
-    - Advanced ~2 min/question
+    9. DURATION RULE (CRITICAL):
+    - If the user explicitly specifies a duration, you MUST set "duration" to that exact value.
+    - You are NOT allowed to calculate, modify, or override it.
+    - Example: 15 minutes, 30 minutes, etc.
+    - If the user does NOT specify a duration, estimate it based on:
+        + Beginner: ~1 minute per question
+        + Intermediate: ~1.5 minutes per question
+        + Advanced: ~2 minutes per question
     10. The "name" must be a clear grammar-related test title.
     11. Do NOT include markdown, comments, or any text outside the JSON.
-    12. If a specific duration is required, use it exactly.
 
     OUTPUT:
     Return ONLY the JSON object.

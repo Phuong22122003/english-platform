@@ -288,7 +288,7 @@ class AgentService:
             return await self.create_grammar_test(request)
     async def create_grammar_test(self, request: TestRequest):
         client = await MCPClientHolder.get_client()
-        prompt = await client.get_prompt("get_grammar_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}, topic content: {request.content}'})
+        prompt = await client.get_prompt("get_grammar_test_creation_prompt", arguments={"description": f'Topic name: {request.name}\n{request.description}\nTopic content: {request.content[:500] if request.content else ""}'})
         prompt = prompt.messages[0].content.text
         response = self.llm.invoke(prompt)
         test = response.content
@@ -323,7 +323,7 @@ class AgentService:
         )
     async def create_listening_test(self, request: TestRequest):
         client = await MCPClientHolder.get_client()
-        prompt = await client.get_prompt("get_listening_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}'})
+        prompt = await client.get_prompt("get_listening_test_creation_prompt", arguments={"description": f'Topic name: {request.name}\n {request.description}'})
         prompt = prompt.messages[0].content.text
         response = self.llm.invoke(prompt)
         test = response.content
@@ -388,7 +388,7 @@ class AgentService:
         
     async def create_vocabulary_test(self,request: TestRequest):
         client = await MCPClientHolder.get_client()
-        prompt = await client.get_prompt("get_vocab_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}'})
+        prompt = await client.get_prompt("get_vocab_test_creation_prompt", arguments={"description": f'Topic name: {request.name}\n {request.description}'})
         prompt = prompt.messages[0].content.text
         response = self.llm.invoke(prompt)
         test = response.content
