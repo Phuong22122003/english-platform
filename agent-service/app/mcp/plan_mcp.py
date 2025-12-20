@@ -163,12 +163,12 @@ def get_vocab_test_creation_prompt(description:str) ->str:
         {{
         "word": "string",
         "question": "string",
-        "options": {
+        "options": {{
             "a": "string",
             "b": "string",
             "c": "string",
             "d": "string"
-        },
+        }},
         "correctAnswer": "a | b | c | d",
         "explanation": "string"
         }},

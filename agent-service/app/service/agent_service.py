@@ -94,7 +94,7 @@ class AgentService:
         if files:
             old = files[0]
             ext = os.path.splitext(old)[1]
-            new_name = f"{name}{ext}"
+            new_name = f"{name}.jpg"
             old_path = os.path.join(save_dir, old)
             new_path = os.path.join(save_dir, new_name)
 
