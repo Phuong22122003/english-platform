@@ -51,10 +51,10 @@ public class VocabularyController {
     @PostMapping("/topics/file")
     public ResponseEntity<?> createTopic(
             @RequestPart("topic") VocabTopicRequest request,
-            @RequestPart("vocabulary_file") MultipartFile excelFile,
             @RequestPart(value = "topic_image", required = false) MultipartFile topicImage,
-            @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
-            @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
+            @RequestPart("vocabulary_file") MultipartFile excelFile,
+            @RequestPart(value = "vocab_images", required = false) List<MultipartFile> imageFiles,
+            @RequestPart(value = "vocab_audios", required = false) List<MultipartFile> audioFiles) {
         var res = vocabularyService.addTopic(request, topicImage);
         return ResponseEntity.ok(vocabularyService.addVocabularies(res.getId(), excelFile, imageFiles, audioFiles));
     }

@@ -192,6 +192,7 @@ def get_vocab_test_creation_prompt(description:str) ->str:
     8. The "name" should be a clear, meaningful quiz title related to the description.
     9. Do NOT include markdown, comments, or any text outside the JSON.
     10. Do NOT wrap the JSON in ```.
+    11. If user require duration, you must use their duration. You also need to do follow their requirment.
 
     OUTPUT:
     Return ONLY the JSON object.
@@ -252,6 +253,61 @@ def get_vocab_topic_prompt(description:str) ->str:
     - Do NOT wrap the response in markdown.
     - Do NOT explain anything.
 '''
+@mcp.prompt()
+def get_listening_topic_prompt(description: str) -> str:
+    return f'''You are an AI assistant that generates English LISTENING practice topics for learners.
+
+    INPUT:
+    - topic_description: "{description}"
+
+    TASK:
+    Based on the given topic_description, create a suitable LISTENING topic and generate listening practice data.
+
+    REQUIREMENTS:
+    1. This is a LISTENING topic for learning English.
+    2. You must decide an appropriate topic name and description based on the input.
+    3. Choose a suitable level from: BEGINNER, INTERMEDIATE, ADVANCED.
+    4. Generate multiple listening exercises related to the topic.
+    5. Each listening exercise MUST include:
+    - A short spoken transcript (what the learner will listen to).
+    - ONE comprehension question about the transcript.
+    - Four multiple-choice options (A, B, C, D).
+    - ONE correct answer (A, B, C, or D).
+    6. imageName and audioName can be any suitable filenames, but MUST be consistent and realistic.
+    7. The transcript must be natural spoken English appropriate for the selected level.
+    8. The question MUST test understanding of the transcript.
+    9. Do NOT add any extra text, explanation, or markdown.
+    10. The response MUST be a valid JSON-like object in the exact format below.
+
+    RESPONSE FORMAT (STRICT):
+    {{
+    name: "<topic name>",
+    description: "<short description of this listening topic>",
+    level: "BEGINNER | INTERMEDIATE | ADVANCED",
+    listening: [
+        {{
+        name: "<short listening title>",
+        transcript: "<spoken English transcript>",
+        question: "<listening comprehension question>",
+        options: {{
+            a: "<option A>",
+            b: "<option B>",
+            c: "<option C>",
+            d: "<option D>"
+        }},
+        correctAnswer: "a | b | c | d",
+        imageName: "<image file name>.jpg",
+        audioName: "<audio file name>.mp3"
+        }}
+    ]
+    }}
+
+    IMPORTANT:
+    - Return ONLY the object.
+    - Do NOT wrap the response in markdown.
+    - Do NOT explain anything.
+    '''
+
 @mcp.tool()
 def get_current_time(timezone: str = "Asia/Ho_Chi_Minh") -> str:
     """Return the current system time in ISO format for a given timezone."""

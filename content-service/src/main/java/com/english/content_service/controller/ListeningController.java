@@ -42,7 +42,18 @@ public class ListeningController {
             @RequestPart("image") MultipartFile image) {
         return ResponseEntity.ok(listeningService.addTopic(request, image));
     }
-
+    @PostMapping("/topics/file")
+    public ResponseEntity<ListeningTopicResponse> addTopic(
+            @RequestPart("topic") ListeningTopicRequest topicRequest,
+            @RequestPart("topic_image") MultipartFile topicImage,
+            @RequestPart("listening") List<ListeningRequest> listeningRequests,
+            @RequestPart(value = "listening_images", required = false) List<MultipartFile> listeningImageFiles,
+            @RequestPart(value = "listening_audios", required = false) List<MultipartFile> listeningAudioFiles
+    ){
+        ListeningTopicResponse listeningTopicResponse = listeningService.addTopic(topicRequest,topicImage);
+        listeningTopicResponse.setListenings(listeningService.addListeningList(listeningTopicResponse.getId(),listeningRequests,listeningImageFiles,listeningAudioFiles));
+        return  ResponseEntity.ok(listeningTopicResponse);
+    }
     @PutMapping("/topics/{id}")
     public ResponseEntity<ListeningTopicResponse> updateTopic(
             @PathVariable("id") String topicId,
