@@ -284,71 +284,108 @@ class AgentService:
             return await self.create_vocabulary_test(request)
         elif request.test_type == 'LISTENING':
             return await self.create_listening_test(request)
+        elif request.test_type == 'GRAMMAR':
+            return await self.create_grammar_test(request)
+    async def create_grammar_test(self, request: TestRequest):
+        client = await MCPClientHolder.get_client()
+        prompt = await client.get_prompt("get_grammar_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}, topic content: {request.content}'})
+        prompt = prompt.messages[0].content.text
+        response = self.llm.invoke(prompt)
+        test = response.content
+        if test.startswith("```"):
+                test = test.strip("`")       # xóa dấu `
+                test = test.replace("json", "", 1).strip()  # xóa chữ 'json' ở đầu nếu có
+        print(test)
+        test = json.loads(test)
+        test_payload = {}
+        test_payload['name'] = test['name']
+        test_payload['duration'] = test['duration']
+        test_payload['questions'] = []
+        for q in test['questions']:
+            q['explaination'] = q['explanation']
+            test_payload["questions"].append(q)
+        headers = {
+            "Authorization": f"Bearer {settings.JWT}",
+            "Content-Type": "application/json"
+        }
+        response = requests.post(
+            settings.CONTENT_SERVICE_URL + f"/grammar/grammars/{request.id}/tests",
+            json=test_payload,
+            headers=headers,
+            
+        )
+        print(settings.CONTENT_SERVICE_URL + f"/grammar/grammars/{request.id}/tests")
+        print(response.text)
         
+        return JSONResponse(
+            status_code=response.status_code,
+            content=response.json()
+        )
     async def create_listening_test(self, request: TestRequest):
-            client = await MCPClientHolder.get_client()
-            prompt = await client.get_prompt("get_listening_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}'})
-            prompt = prompt.messages[0].content.text
-            response = self.llm.invoke(prompt)
-            test = response.content
-            if test.startswith("```"):
-                    test = test.strip("`")       # xóa dấu `
-                    test = test.replace("json", "", 1).strip()  # xóa chữ 'json' ở đầu nếu có
-            print(test)
-            test = json.loads(test)
-            test_payload = {}
-            test_payload['name'] = test['name']
-            test_payload['duration'] = test['duration']
-            test_payload['questions'] = []
-            for q in test['questions']:
-                audio_path = os.path.join(self.AUDIO_ROOT,  q['audioName'])
-                # ---- Tạo audio ----
-                try:
-                    tts = gTTS(text=q['transcript'], lang="en")
-                    tts.save(audio_path)
-                except Exception as e:
-                    pass
-                
-                image_name = q['imageName']
-                
-                if '.' in image_name:
-                    image_name = image_name.split('.')[-2]
-                await self.get_image(name = image_name, description = q['question'], path=self.IMAGE_ROOT)
-                
-                q['explaination'] = q['explanation']
-                
-                test_payload["questions"].append(q)
-                
-            payload = []
-            payload.append(
-                    ('request', ('test.json', json.dumps(test_payload), "application/json"))
-            )
-            for filename in os.listdir(self.IMAGE_ROOT): 
-                path = os.path.join(self.IMAGE_ROOT, filename) 
-                if os.path.isfile(path):
-                    payload.append( ("images", (filename, open(path, "rb"), "image/jpeg")) )
-            for filename in os.listdir(self.AUDIO_ROOT):
-                path = os.path.join(self.AUDIO_ROOT, filename) 
-                if os.path.isfile(path):
-                    payload.append( ("audios", (filename, open(path, "rb"), "audio/mpeg")) )
-            headers = {
-                "Authorization": f"Bearer {settings.JWT}"
-            }
-            response = requests.post(
-                settings.CONTENT_SERVICE_URL + f"/listening/topics/{request.id}/tests",
-                files=payload,
-                headers=headers
-            )
-            print(settings.CONTENT_SERVICE_URL + f"/listening/topics/{request.id}/tests")
-            print(response.text)
-            for _, f in payload:
-                content = f[1]
-                if isinstance(content, tuple) and hasattr(content[1], "close"):
-                    content[1].close()
-            return JSONResponse(
-                status_code=response.status_code,
-                content=response.json()
-            )
+        client = await MCPClientHolder.get_client()
+        prompt = await client.get_prompt("get_listening_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}'})
+        prompt = prompt.messages[0].content.text
+        response = self.llm.invoke(prompt)
+        test = response.content
+        if test.startswith("```"):
+                test = test.strip("`")       # xóa dấu `
+                test = test.replace("json", "", 1).strip()  # xóa chữ 'json' ở đầu nếu có
+        print(test)
+        test = json.loads(test)
+        test_payload = {}
+        test_payload['name'] = test['name']
+        test_payload['duration'] = test['duration']
+        test_payload['questions'] = []
+        for q in test['questions']:
+            audio_path = os.path.join(self.AUDIO_ROOT,  q['audioName'])
+            # ---- Tạo audio ----
+            try:
+                tts = gTTS(text=q['transcript'], lang="en")
+                tts.save(audio_path)
+            except Exception as e:
+                pass
+            
+            image_name = q['imageName']
+            
+            if '.' in image_name:
+                image_name = image_name.split('.')[-2]
+            await self.get_image(name = image_name, description = q['question'], path=self.IMAGE_ROOT)
+            
+            q['explaination'] = q['explanation']
+            
+            test_payload["questions"].append(q)
+            
+        payload = []
+        payload.append(
+                ('request', ('test.json', json.dumps(test_payload), "application/json"))
+        )
+        for filename in os.listdir(self.IMAGE_ROOT): 
+            path = os.path.join(self.IMAGE_ROOT, filename) 
+            if os.path.isfile(path):
+                payload.append( ("images", (filename, open(path, "rb"), "image/jpeg")) )
+        for filename in os.listdir(self.AUDIO_ROOT):
+            path = os.path.join(self.AUDIO_ROOT, filename) 
+            if os.path.isfile(path):
+                payload.append( ("audios", (filename, open(path, "rb"), "audio/mpeg")) )
+        headers = {
+            "Authorization": f"Bearer {settings.JWT}"
+        }
+        response = requests.post(
+            settings.CONTENT_SERVICE_URL + f"/listening/topics/{request.id}/tests",
+            files=payload,
+            headers=headers
+        )
+        print(settings.CONTENT_SERVICE_URL + f"/listening/topics/{request.id}/tests")
+        print(response.text)
+        for _, f in payload:
+            content = f[1]
+            if isinstance(content, tuple) and hasattr(content[1], "close"):
+                content[1].close()
+        return JSONResponse(
+            status_code=response.status_code,
+            content=response.json()
+        )
+        
     async def create_vocabulary_test(self,request: TestRequest):
         client = await MCPClientHolder.get_client()
         prompt = await client.get_prompt("get_vocab_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}'})

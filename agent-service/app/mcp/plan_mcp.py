@@ -254,6 +254,64 @@ def get_listening_test_creation_prompt(description: str) -> str:
     OUTPUT:
     Return ONLY the JSON object.
     '''
+@mcp.prompt()
+def get_grammar_test_creation_prompt(description: str) -> str:
+    return f'''You are an AI assistant that creates English GRAMMAR tests.
+
+    INPUT:
+    - Description: "{description}"
+
+    TASK:
+    Create a GRAMMAR test for English learners based on the description.
+
+    OUTPUT FORMAT (STRICT):
+    Return ONE JSON object with this structure:
+
+    {{
+    "name": "string",
+    "duration": number,
+    "questions": [
+        {{
+        "question": "string",
+        "options": {{
+            "a": "string",
+            "b": "string",
+            "c": "string",
+            "d": "string"
+        }},
+        "correctAnswer": "a | b | c | d",
+        "questionOrder": number,
+        "explanation": "string"
+        }}
+    ]
+    }}
+
+    RULES:
+    1. This is a GRAMMAR test (not vocabulary or listening).
+    2. Each question MUST test a specific grammar point, such as:
+    - Tenses
+    - Prepositions
+    - Articles
+    - Conditionals
+    - Passive voice
+    - Sentence structure
+    3. Each question focuses on ONE grammar concept.
+    4. Questions should be clear and suitable for the intended level.
+    5. Only ONE option is correct.
+    6. Options must be grammatically plausible.
+    7. The explanation must clearly explain why the correct answer is correct.
+    8. questionOrder MUST start from 1 and increase sequentially.
+    9. Set "duration" (minutes) by difficulty:
+    - Beginner ~1 min/question
+    - Intermediate ~1.5 min/question
+    - Advanced ~2 min/question
+    10. The "name" must be a clear grammar-related test title.
+    11. Do NOT include markdown, comments, or any text outside the JSON.
+    12. If a specific duration is required, use it exactly.
+
+    OUTPUT:
+    Return ONLY the JSON object.
+    '''
 
 @mcp.prompt()
 def get_vocab_topic_prompt(description:str) ->str:
