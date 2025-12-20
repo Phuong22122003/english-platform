@@ -169,7 +169,7 @@ class AgentService:
             "Authorization": f"Bearer {settings.JWT}"
         }
         response = requests.post(
-            settings.CONTENT_SERVICE_URL + f"/listening/topics/file",
+            settings.CONTENT_SERVICE_URL + f"/listening/topics/full",
             files=files,
             headers=headers
         )
@@ -249,18 +249,18 @@ class AgentService:
         for filename in os.listdir(self.IMAGE_ROOT): 
             path = os.path.join(self.IMAGE_ROOT, filename) 
             if os.path.isfile(path):
-                files.append( ("images", (filename, open(path, "rb"), "image/jpeg")) )
+                files.append( ("vocab_images", (filename, open(path, "rb"), "image/jpeg")) )
         for filename in os.listdir(self.AUDIO_ROOT): 
             path = os.path.join(self.AUDIO_ROOT, filename) 
             if os.path.isfile(path):
-                files.append( ("audios", (filename, open(path, "rb"), "audio/mpeg")) )
+                files.append( ("vocab_audios", (filename, open(path, "rb"), "audio/mpeg")) )
         
         headers = {
             "Authorization": f"Bearer {settings.JWT}"
         }
         
         response = requests.post(
-            settings.CONTENT_SERVICE_URL + f"/vocabulary/topics/file",
+            settings.CONTENT_SERVICE_URL + f"/vocabulary/topics/full",
             files=files,
             headers=headers
         )

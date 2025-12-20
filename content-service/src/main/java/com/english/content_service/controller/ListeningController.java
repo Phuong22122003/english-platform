@@ -42,7 +42,7 @@ public class ListeningController {
             @RequestPart("image") MultipartFile image) {
         return ResponseEntity.ok(listeningService.addTopic(request, image));
     }
-    @PostMapping("/topics/file")
+    @PostMapping("/topics/full")
     public ResponseEntity<ListeningTopicResponse> addTopic(
             @RequestPart("topic") ListeningTopicRequest topicRequest,
             @RequestPart("topic_image") MultipartFile topicImage,
