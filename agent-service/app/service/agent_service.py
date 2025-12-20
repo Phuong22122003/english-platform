@@ -208,7 +208,7 @@ class AgentService:
         test_payload['questions'] = []
         for q in test['questions']:
             await self.get_image(name = q['word'], description= q['word'],path=self.IMAGE_ROOT)
-            q['imageName'] = f'{q['word']}.jpg'
+            q['imageName'] = f"{q['word']}.jpg"
             q['explaination'] = q['explanation']
             q['options'] = {
                 'a': q['A'],
