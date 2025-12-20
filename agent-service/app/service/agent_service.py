@@ -122,71 +122,8 @@ class AgentService:
         client = await MCPClientHolder.get_client()
         prompt = await client.get_prompt("get_listening_topic_prompt", arguments={"description": description})
         prompt = prompt.messages[0].content.text
-        # response = self.llm.invoke(prompt)
-        # topic = response.content
-        topic = ''' {
-  "name": "Amazing Animal Adaptations",
-  "description": "Explore the incredible ways animals have adapted to survive in their environments.",
-  "level": "INTERMEDIATE",
-  "listening": [
-    {
-      "name": "Camel's Desert Survival",
-      "transcript": "Camels are perfectly adapted for life in the desert. They can drink a lot of water at once, and their humps store fat, which they can convert to energy and water when food is scarce. Their thick fur also protects them from the scorching sun during the day and the cold nights.",
-      "question": "What is stored in a camel's hump?",
-      "options": {
-        "a": "Water",
-        "b": "Fat",
-        "c": "Food",
-        "d": "Sand"
-      },
-      "correctAnswer": "b",
-      "imageName": "camel_desert.jpg",
-      "audioName": "camel_desert.mp3"
-    },
-    {
-      "name": "Arctic Fox Camouflage",
-      "transcript": "The Arctic fox has a remarkable adaptation for surviving in its snowy habitat. In winter, its fur turns white, providing excellent camouflage against the snow, making it hard for predators to spot and easier for it to hunt. In the summer, its fur changes to a brown or grey color to blend in with the rocks and tundra.",
-      "question": "Why does the Arctic fox's fur change color?",
-      "options": {
-        "a": "To attract mates",
-        "b": "To regulate its body temperature",
-        "c": "To blend in with its surroundings",
-        "d": "To scare away predators"
-      },
-      "correctAnswer": "c",
-      "imageName": "arctic_fox_snow.jpg",
-      "audioName": "arctic_fox_snow.mp3"
-    },
-    {
-      "name": "Chameleon's Color Change",
-      "transcript": "Chameleons are famous for their ability to change color. This isn't just for camouflage; they also use color to communicate with other chameleons. Bright colors can signal aggression or excitement, while darker colors might indicate stress or submission. Their eyes can also move independently, allowing them to see in almost any direction.",
-      "question": "Besides camouflage, what is another reason chameleons change color?",
-      "options": {
-        "a": "To cool down",
-        "b": "To communicate with other chameleons",
-        "c": "To find food",
-        "d": "To sleep better"
-      },
-      "correctAnswer": "b",
-      "imageName": "chameleon_color.jpg",
-      "audioName": "chameleon_color.mp3"
-    },
-    {
-      "name": "Penguin's Waterproof Feathers",
-      "transcript": "Penguins have a unique adaptation that helps them in their aquatic lifestyle. Their feathers are very dense and oily, creating a waterproof layer that keeps them warm in the icy water. This also helps them to be more streamlined for swimming and diving efficiently to catch fish.",
-      "question": "What do the oily feathers of penguins help them do?",
-      "options": {
-        "a": "To fly better",
-        "b": "To stay warm and dry in the water",
-        "c": "To attract prey",
-        "d": "To walk on ice"
-      },
-      "correctAnswer": "b",
-      "imageName": "penguin_swim.jpg",
-      "audioName": "penguin_swim.mp3"
-    }
-  ]
-}'''
+        response = self.llm.invoke(prompt)
+        topic = response.content
         if topic.startswith("```"):
             topic = topic.strip("`")
             topic = topic.replace("json", "", 1).strip()
@@ -340,6 +277,77 @@ class AgentService:
         
     async def create_test(self,request: TestRequest):
         await self.clear_directory(self.IMAGE_ROOT)        
+        await self.clear_directory(self.AUDIO_ROOT)
+        if request.test_type== 'VOCABULARY':
+            return await self.create_vocabulary_test(request)
+        elif request.test_type == 'LISTENING':
+            return await self.create_listening_test(request)
+        
+    async def create_listening_test(self, request: TestRequest):
+            client = await MCPClientHolder.get_client()
+            prompt = await client.get_prompt("get_listening_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}'})
+            prompt = prompt.messages[0].content.text
+            response = self.llm.invoke(prompt)
+            test = response.content
+            if test.startswith("```"):
+                    test = test.strip("`")       # xóa dấu `
+                    test = test.replace("json", "", 1).strip()  # xóa chữ 'json' ở đầu nếu có
+            print(test)
+            test = json.loads(test)
+            test_payload = {}
+            test_payload['name'] = test['name']
+            test_payload['duration'] = test['duration']
+            test_payload['questions'] = []
+            for q in test['questions']:
+                audio_path = os.path.join(self.AUDIO_ROOT,  q['audioName'])
+                # ---- Tạo audio ----
+                try:
+                    tts = gTTS(text=q['transcript'], lang="en")
+                    tts.save(audio_path)
+                except Exception as e:
+                    pass
+                
+                image_name = q['imageName']
+                
+                if '.' in image_name:
+                    image_name = image_name.split('.')[-2]
+                await self.get_image(name = image_name, description = q['question'], path=self.IMAGE_ROOT)
+                
+                q['explaination'] = q['explanation']
+                
+                test_payload["questions"].append(q)
+                
+            payload = []
+            payload.append(
+                    ('request', ('test.json', json.dumps(test_payload), "application/json"))
+            )
+            for filename in os.listdir(self.IMAGE_ROOT): 
+                path = os.path.join(self.IMAGE_ROOT, filename) 
+                if os.path.isfile(path):
+                    payload.append( ("images", (filename, open(path, "rb"), "image/jpeg")) )
+            for filename in os.listdir(self.AUDIO_ROOT):
+                path = os.path.join(self.AUDIO_ROOT, filename) 
+                if os.path.isfile(path):
+                    payload.append( ("audios", (filename, open(path, "rb"), "audio/mpeg")) )
+            headers = {
+                "Authorization": f"Bearer {settings.JWT}"
+            }
+            response = requests.post(
+                settings.CONTENT_SERVICE_URL + f"/listening/topics/{request.id}/tests",
+                files=payload,
+                headers=headers
+            )
+            print(settings.CONTENT_SERVICE_URL + f"/listening/topics/{request.id}/tests")
+            print(response.text)
+            for _, f in payload:
+                content = f[1]
+                if isinstance(content, tuple) and hasattr(content[1], "close"):
+                    content[1].close()
+            return JSONResponse(
+                status_code=response.status_code,
+                content=response.json()
+            )
+    async def create_vocabulary_test(self,request: TestRequest):
         client = await MCPClientHolder.get_client()
         prompt = await client.get_prompt("get_vocab_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}'})
         prompt = prompt.messages[0].content.text
@@ -358,13 +366,6 @@ class AgentService:
             await self.get_image(name = q['word'], description= q['word'],path=self.IMAGE_ROOT)
             q['imageName'] = f"{q['word']}.jpg"
             q['explaination'] = q['explanation']
-            q['options'] = {
-                'a': q['A'],
-                'b': q['B'],
-                'c': q['C'],
-                'd': q['D']
-            }
-            q['correctAnswer'] = q['correctAnswer'].lower()
             test_payload["questions"].append(q)
         payload = []
         payload.append(

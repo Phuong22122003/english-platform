@@ -483,7 +483,7 @@ public class ListeningServiceImpl implements ListeningService {
                 var qRequest = request.getQuestions().get(i);
                 var imageName = qRequest.getImageName();
                 // upload image nếu có
-                if (imageName != null && !imageName.isEmpty()) {
+                if (imageName != null && !imageName.isEmpty() && imageMap.get(imageName) !=null) {
                     var imageResponse = fileService.uploadImage(imageMap.get(imageName));
                     q.setImageUrl(imageResponse.getUrl());
                     q.setPublicImageId(imageResponse.getPublicId());
@@ -493,7 +493,7 @@ public class ListeningServiceImpl implements ListeningService {
                 var audioName = qRequest.getAudioName();
 
                 // upload audio nếu có
-                if (audioName!=null && !audioName.isEmpty()) {
+                if (audioName!=null && !audioName.isEmpty() && audioMap.get(audioName) != null) {
                     var audioResponse = fileService.uploadAudio(audioMap.get(audioName));
                     q.setAudioUrl(audioResponse.getUrl());
                     q.setPublicAudioId(audioResponse.getPublicId());

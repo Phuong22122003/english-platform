@@ -163,11 +163,13 @@ def get_vocab_test_creation_prompt(description:str) ->str:
         {{
         "word": "string",
         "question": "string",
-        "A": "string",
-        "B": "string",
-        "C": "string",
-        "D": "string",
-        "correctAnswer": "A | B | C | D",
+        "options": {
+            "a": "string",
+            "b": "string",
+            "c": "string",
+            "d": "string"
+        },
+        "correctAnswer": "a | b | c | d",
         "explanation": "string"
         }},
         ...
@@ -192,11 +194,67 @@ def get_vocab_test_creation_prompt(description:str) ->str:
     8. The "name" should be a clear, meaningful quiz title related to the description.
     9. Do NOT include markdown, comments, or any text outside the JSON.
     10. Do NOT wrap the JSON in ```.
-    11. If user require duration, you must use their duration. You also need to do follow their requirment.
+    11. If the user requires a specific duration, you MUST use their duration and follow that requirement exactly.
 
     OUTPUT:
     Return ONLY the JSON object.
 '''
+@mcp.prompt()
+def get_listening_test_creation_prompt(description: str) -> str:
+    return f'''You are an AI assistant that creates English LISTENING comprehension tests.
+
+    INPUT:
+    - Description: "{description}"
+
+    TASK:
+    Create a LISTENING test for English learners based on the description.
+
+    OUTPUT FORMAT (STRICT):
+    Return ONE JSON object with this structure:
+
+    {{
+    "name": "string",
+    "duration": number,
+    "questions": [
+        {{
+        "question": "string",
+        "options": {{
+            "a": "string",
+            "b": "string",
+            "c": "string",
+            "d": "string"
+        }},
+        "correctAnswer": "a | b | c | d",
+        "explanation": "string",
+        "transcript": "string",
+        "imageName": "<image file name>.jpg",
+        "audioName": "<audio file name>.mp3"
+        }}
+    ]
+    }}
+
+    RULES:
+    1. This is a LISTENING test (not vocabulary or grammar).
+    2. Each question MUST include:
+    - A short spoken transcript (1–3 sentences).
+    - ONE comprehension question based on the transcript.
+    - Four options (A, B, C, D).
+    - ONE correct answer.
+    3. The transcript is the exact audio content the learner will hear.
+    4. The explanation must justify the correct answer using the transcript.
+    5. imageName and audioName are required for each question.
+    6. Set "duration" (minutes) by difficulty:
+    - Beginner ~1.5 min/question
+    - Intermediate ~2 min/question
+    - Advanced ~2.5 min/question
+    7. The "name" must match the test topic.
+    8. Do NOT include markdown, comments, or any text outside the JSON.
+    9. If a specific duration is required, use it exactly.
+
+    OUTPUT:
+    Return ONLY the JSON object.
+    '''
+
 @mcp.prompt()
 def get_vocab_topic_prompt(description:str) ->str:
     return f'''You are an AI assistant that generates English vocabulary topics for learners.
@@ -281,23 +339,23 @@ def get_listening_topic_prompt(description: str) -> str:
 
     RESPONSE FORMAT (STRICT):
     {{
-    name: "<topic name>",
-    description: "<short description of this listening topic>",
-    level: "BEGINNER | INTERMEDIATE | ADVANCED",
-    listening: [
+    "name": "<topic name>",
+    "description": "<short description of this listening topic>",
+    "level": "BEGINNER | INTERMEDIATE | ADVANCED",
+    "listening": [
         {{
-        name: "<short listening title>",
-        transcript: "<spoken English transcript>",
-        question: "<listening comprehension question>",
-        options: {{
-            a: "<option A>",
-            b: "<option B>",
-            c: "<option C>",
-            d: "<option D>"
+        "name": "<short listening title>",
+        "transcript": "<spoken English transcript>",
+        "question": "<listening comprehension question>",
+        "options": {{
+            "a": "<option A>",
+            "b": "<option B>",
+            "c": "<option C>",
+            "d": "<option D>"
         }},
-        correctAnswer: "a | b | c | d",
-        imageName: "<image file name>.jpg",
-        audioName: "<audio file name>.mp3"
+        "correctAnswer": "a | b | c | d",
+        "imageName": "<image file name>.jpg",
+        "audioName": "<audio file name>.mp3"
         }}
     ]
     }}
