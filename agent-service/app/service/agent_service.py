@@ -68,8 +68,9 @@ class AgentService:
                         shutil.rmtree(file_path)  # xóa folder con
                 except Exception as e:
                     print(f" Không xóa được {file_path}: {e}")
-    async def get_image(self, name, description=None, max_size=(300, 300)):
-        save_dir = os.path.join(self.IMAGE_ROOT)
+    async def get_image(self, name, description=None, path = None, max_size=(300, 300)):
+        if path == None: path = self.IMAGE_ROOT
+        save_dir = os.path.join(path)
         os.makedirs(save_dir, exist_ok=True)
         if description == None:
             description = name
@@ -119,7 +120,7 @@ class AgentService:
             print(topic)
             topic = json.loads(topic)
             # Topic image
-            await self.get_image(name = 'topic', description= topic['description'])
+            await self.get_image(name = 'topic', description= topic['description'], path=self.TOPIC_ROOT)
   
             ws.title = topic['name']
             ws.append(self.VOCAB_HEADERS)
@@ -143,7 +144,7 @@ class AgentService:
                     row[6] = "ERROR.mp3"
 
                 # ---- Tải ảnh ----
-                await self.get_image(word)
+                await self.get_image(name = word,description=word,path=self.IMAGE_ROOT)
 
                 # ---- Ghi Excel ----
                 ws.append(row)
@@ -206,7 +207,7 @@ class AgentService:
         test_payload['duration'] = test['duration']
         test_payload['questions'] = []
         for q in test['questions']:
-            await self.get_image(q['word'])
+            await self.get_image(name = q['word'], description= q['word'],path=self.IMAGE_ROOT)
             q['imageName'] = f'{q['word']}.jpg'
             q['explaination'] = q['explanation']
             q['options'] = {
