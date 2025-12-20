@@ -101,7 +101,9 @@ class AgentService:
             # Resize ảnh
             with Image.open(old_path) as img:
                 img.thumbnail(max_size)
-                img.save(new_path)
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
+                img.save(new_path, format="JPEG")
 
             # Xóa file gốc nếu cần
             if old_path != new_path:
