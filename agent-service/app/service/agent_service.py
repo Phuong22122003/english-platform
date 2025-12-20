@@ -67,7 +67,7 @@ class AgentService:
                     elif os.path.isdir(file_path):
                         shutil.rmtree(file_path)  # xóa folder con
                 except Exception as e:
-                    print(f"❌ Không xóa được {file_path}: {e}")
+                    print(f" Không xóa được {file_path}: {e}")
     async def get_image(self, name, description=None, max_size=(300, 300)):
         save_dir = os.path.join(self.IMAGE_ROOT)
         os.makedirs(save_dir, exist_ok=True)
@@ -194,36 +194,8 @@ class AgentService:
         client = await MCPClientHolder.get_client()
         prompt = await client.get_prompt("get_vocab_test_creation_prompt", arguments={"description": f'Topic name: {request.name}, description: {request.description}'})
         prompt = prompt.messages[0].content.text
-        # response = self.llm.invoke(prompt)
-        # test = response.content
-        test='''
-{
-  "name": "Trees and Plants Vocabulary",
-  "duration": 3,
-  "questions": [
-    {
-      "word": "sapling",
-      "question": "A young tree that has been recently planted is called a:",
-      "A": "Root",
-      "B": "Sapling",
-      "C": "Canopy",
-      "D": "Trunk",
-      "correctAnswer": "B",
-      "explanation": "A sapling is a young tree, typically one that is small enough to be transplanted."
-    },
-    {
-      "word": "deciduous",
-      "question": "Which word describes trees that lose their leaves seasonally, usually in autumn?",
-      "A": "Evergreen",
-      "B": "Flowering",
-      "C": "Deciduous",
-      "D": "Fruiting",
-      "correctAnswer": "C",
-      "explanation": "Deciduous plants are those that shed their leaves seasonally, as opposed to evergreen plants which retain their leaves year-round."
-    }
-  ]
-}
-'''
+        response = self.llm.invoke(prompt)
+        test = response.content
         if test.startswith("```"):
                 test = test.strip("`")       # xóa dấu `
                 test = test.replace("json", "", 1).strip()  # xóa chữ 'json' ở đầu nếu có
@@ -243,6 +215,7 @@ class AgentService:
                 'c': q['C'],
                 'd': q['D']
             }
+            q['correctAnswer'] = q['correctAnswer'].lower()
             test_payload["questions"].append(q)
         payload = []
         payload.append(
@@ -318,17 +291,17 @@ class AgentService:
 
         try:
             plan_groups = json.loads(plan_group_json)
-            print("✅ Generated plan groups:", plan_groups)
+            print(" Generated plan groups:", plan_groups)
             plan["planGroups"] = plan_groups
         except Exception as e:
-            print("❌ JSON parse error in plan_group:", e)
+            print(" JSON parse error in plan_group:", e)
             plan_groups = existing_groups  # fallback giữ nhóm cũ
 
         return plan
 
     async def plan_detail(self, plan: dict):
         existTopic = set()
-        print("🧠 Creating plan details...")
+        print("Creating plan details...")
         client = await MCPClientHolder.get_client()
 
         # ======= HELPER FUNCTIONS =======
@@ -390,7 +363,7 @@ class AgentService:
             while retries < 3 and not success:
                 print(f"\n🔹 [Group {idx+1}] {group.get('name', 'Unnamed')} (Attempt {retries+1}/3)")
 
-                # 🔎 1️⃣ Tìm topics liên quan trong VectorDB
+                #   Tìm topics liên quan trong VectorDB
                 data = topic_service.search(
                     group.get('name', '') + ' ' +
                     group.get('description', '') + ' ' +
@@ -398,11 +371,11 @@ class AgentService:
                 )
 
                 if not data:
-                    print(f"⚠️ No topics found for '{group.get('name', 'Unnamed')}' → regenerating group {idx}...")
+                    print(f" No topics found for '{group.get('name', 'Unnamed')}' → regenerating group {idx}...")
                     try:
                         regenerated_plan = await self.plan_group(plan, replace_index=idx)
                     except Exception as e:
-                        print(f"❌ MCP error while regenerating group {idx}: {e}")
+                        print(f" MCP error while regenerating group {idx}: {e}")
                         retries += 1
                         continue
 
@@ -411,14 +384,14 @@ class AgentService:
                     if new_groups and idx < len(new_groups):
                         plan["planGroups"] = new_groups
                         group = plan["planGroups"][idx]
-                        print(f"✅ Group {idx+1} regenerated → '{group.get('name', 'Unnamed')}'")
+                        print(f" Group {idx+1} regenerated → '{group.get('name', 'Unnamed')}'")
                         data = topic_service.search(
                             group.get('name', '') + ' ' +
                             group.get('description', '') + ' ' +
                             plan.get('level', '')
                         )
                     else:
-                        print("❌ Regeneration failed or wrong index.")
+                        print(" Regeneration failed or wrong index.")
                         break
 
                 # Không có data sau regenerate
@@ -426,7 +399,7 @@ class AgentService:
                     retries += 1
                     continue
 
-                # 🔮 2️⃣ Gọi LLM sinh chi tiết nhóm
+                #   Gọi LLM sinh chi tiết nhóm
                 try:
                     prompt = await client.get_prompt(
                         "get_plan_detail_prompt",
@@ -444,11 +417,11 @@ class AgentService:
                         result_json = result_json.strip("`").replace("json", "").strip()
                     evaluation = json.loads(result_json)
                 except Exception as e:
-                    print(f"❌ Error invoking LLM or parsing JSON for group {idx+1}: {e}")
+                    print(f" Error invoking LLM or parsing JSON for group {idx+1}: {e}")
                     retries += 1
                     continue
 
-                # 🔍 3️⃣ Phân tích kết quả đánh giá
+                #   Phân tích kết quả đánh giá
                 plan_detail = []
                 if isinstance(evaluation, dict) and "details" in evaluation:
                     evaluation = evaluation["details"]
@@ -469,10 +442,10 @@ class AgentService:
 
                 if plan_detail:
                     group.setdefault("details", []).extend(plan_detail)
-                    print(f"✅ Generated {len(plan_detail)} detail(s) for '{group.get('name', 'Unnamed')}'")
+                    print(f" Generated {len(plan_detail)} detail(s) for '{group.get('name', 'Unnamed')}'")
                     success = True
                 else:
-                    print(f"⚠️ Group '{group.get('name', 'Unnamed')}' has no details → regenerating this group...")
+                    print(f" Group '{group.get('name', 'Unnamed')}' has no details → regenerating this group...")
                     retries += 1
                     try:
                         regenerated_plan = await self.plan_group(plan, replace_index=idx)
@@ -482,25 +455,25 @@ class AgentService:
                             group = plan["planGroups"][idx]
                             print(f"♻️ Group '{group.get('name', 'Unnamed')}' replaced successfully.")
                         else:
-                            print("❌ Failed to regenerate group (no response or wrong index).")
+                            print(" Failed to regenerate group (no response or wrong index).")
                             break
                     except Exception as e:
-                        print(f"❌ MCP regenerate error: {e}")
+                        print(f" MCP regenerate error: {e}")
                         retries += 1
                         continue
 
-            # 🚫 Sau 3 lần retry thất bại → xóa group và kéo các group sau lên
+            #  Sau 3 lần retry thất bại → xóa group và kéo các group sau lên
             if not success:
-                print(f"🚫 Removing group '{group.get('name', 'Unnamed')}' after {retries} failed attempts.")
+                print(f" Removing group '{group.get('name', 'Unnamed')}' after {retries} failed attempts.")
                 plan["planGroups"].pop(idx)
                 plan["planGroups"] = reschedule_after_removal(plan, idx)
                 continue  # Không tăng idx vì danh sách đã thu ngắn
 
             idx += 1  # Tăng chỉ khi group thành công
 
-        # ✅ Chuẩn hóa dữ liệu và gửi callback
+        #  Chuẩn hóa dữ liệu và gửi callback
         normalized = normalize_datetime_fields(plan)
-        print("\n✅ Final plan with details:", json.dumps(normalized, indent=2, ensure_ascii=False))
+        print("\n Final plan with details:", json.dumps(normalized, indent=2, ensure_ascii=False))
         await send_callback(normalized, plan.get("userId", ""))
         return plan
 
@@ -513,9 +486,9 @@ async def send_callback(plan, userId):
                 settings.PLAN_SERVICE_CALLBACK_URL,
                 json= {**plan, "userId": userId}
             )
-            print("✅ Callback response:", response.status_code, response.text)
+            print(" Callback response:", response.status_code, response.text)
         except Exception as e:
-            print("⚠️ Callback failed:", e)
+            print(" Callback failed:", e)
 
 def normalize_datetime_fields(plan):
     def ensure_full_datetime(value):

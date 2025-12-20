@@ -67,7 +67,7 @@ class PronunciationService:
         
         return ipa_output
     
-    def get_ipa_confidence(self, text_correct, audio_array, sample_rate=16000):
+    def get_ipa_confidence(self, text_correct:str, audio_array, sample_rate=16000):
         """
         Main function để đánh giá phát âm
         Args:
@@ -79,7 +79,7 @@ class PronunciationService:
         """
         
         # ====== 1. Chuyển text đúng sang IPA ======
-        ipa_correct = ipa.convert(text_correct).replace("ˈ", "").replace("ˌ", "")
+        ipa_correct = ipa.convert(text_correct.strip()).replace("ˈ", "").replace("ˌ", "")
         ipa_correct_tokens = [{t: i} for i, t in enumerate(ipa_correct)]
         # ====== 2. Load và predict audio với Whisper ======
         speech_array = np.array(audio_array)
