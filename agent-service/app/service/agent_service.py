@@ -42,6 +42,7 @@ class AgentService:
         self.llm = init_chat_model("gemini-2.5-flash-lite", model_provider="google_genai")
         self.AUDIO_ROOT = os.path.join(BASE_DIR, "files", "audios")
         self.IMAGE_ROOT = os.path.join(BASE_DIR, "files", "images")
+        self.TOPIC_ROOT = os.path.join(BASE_DIR,"files","topic")
         self.EXCEL_FILE = os.path.join(BASE_DIR, "files", "topic.xlsx")
         self.VOCAB_HEADERS = ["word","phonetic (IPA)","meaning","example","exampleMeaning","imageName","audioName"]
         # Compile application and test
@@ -103,6 +104,7 @@ class AgentService:
         ws = wb.active
         await self.clear_directory(self.AUDIO_ROOT)
         await self.clear_directory(self.IMAGE_ROOT)
+        await self.clear_directory(self.TOPIC_ROOT)
         if os.path.exists(self.EXCEL_FILE):
             os.remove(self.EXCEL_FILE)
         client = await MCPClientHolder.get_client()
@@ -116,6 +118,9 @@ class AgentService:
                 topic = topic.replace("json", "", 1).strip()  # xóa chữ 'json' ở đầu nếu có
             print(topic)
             topic = json.loads(topic)
+            # Topic image
+            await self.get_image(name = 'topic', description= topic['description'])
+  
             ws.title = topic['name']
             ws.append(self.VOCAB_HEADERS)
 
@@ -154,6 +159,10 @@ class AgentService:
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 ) 
             )
+            for filename in os.listdir(self.TOPIC_ROOT): 
+                path = os.path.join(self.TOPIC_ROOT, filename) 
+                if os.path.isfile(path):
+                    files.append( ("topic_image", (filename, open(path, "rb"), "image/jpeg")) )
             for filename in os.listdir(self.IMAGE_ROOT): 
                 path = os.path.join(self.IMAGE_ROOT, filename) 
                 if os.path.isfile(path):
