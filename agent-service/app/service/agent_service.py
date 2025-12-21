@@ -543,13 +543,20 @@ class AgentService:
             return plan_groups
 
         # ======= MAIN LOOP =======
+        MAX_TOTAL_ATTEMPTS = 25
+        total_attempts = 0
         idx = 0
         while idx < len(plan.get("planGroups", [])):
+            if total_attempts >= MAX_TOTAL_ATTEMPTS:
+                print(f"⛔ Stop plan_detail: reached max total attempts ({MAX_TOTAL_ATTEMPTS})")
+                break
+
             group = plan["planGroups"][idx]
             retries = 0
             success = False
 
             while retries < 3 and not success:
+                total_attempts += 1
                 print(f"\n🔹 [Group {idx+1}] {group.get('name', 'Unnamed')} (Attempt {retries+1}/3)")
 
                 #   Tìm topics liên quan trong VectorDB

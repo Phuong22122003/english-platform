@@ -278,6 +278,7 @@ public class GrammarServiceImpl implements GrammarService {
         Grammar grammar = grammarRepository.findById(grammarId).orElseThrow(()->new NotFoundException("Grammar not found"));
         grammar.setContent(request.getContent());
         grammar.setTitle(request.getTitle());
+        grammarRepository.save(grammar);
         return grammarMapper.toGrammarResponse(grammar);
     }
 

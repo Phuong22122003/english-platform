@@ -41,7 +41,7 @@ public class StatisticServiceImplt implements StatisticService {
         LocalDate startDate;
         LocalDate endDate = now;
 
-        // 🧭 1️⃣ Xác định khoảng thời gian bắt đầu
+        // Xác định khoảng thời gian bắt đầu
         switch (timeRange) {
             case TODAY -> startDate = now;
             case ONE_WEEK -> startDate = now.minusWeeks(1);
@@ -50,11 +50,11 @@ public class StatisticServiceImplt implements StatisticService {
             default -> throw new IllegalArgumentException("Invalid time range: " + timeRange);
         }
 
-        // 🧭 2️⃣ Lấy danh sách thống kê lượt xem trong khoảng thời gian đó
+        // Lấy danh sách thống kê lượt xem trong khoảng thời gian đó
         List<TopicViewStatistic> statistics =
                 topicViewStatisticRepository.findByViewDateBetween(startDate, endDate);
 
-        // 🧭 3️⃣ Group dữ liệu theo mốc thời gian phù hợp
+        // Group dữ liệu theo mốc thời gian phù hợp
         Map<String, Integer> groupedData;
         DateTimeFormatter formatter;
 
@@ -88,12 +88,12 @@ public class StatisticServiceImplt implements StatisticService {
             default -> throw new IllegalArgumentException("Invalid time range: " + timeRange);
         }
 
-        // 🧭 4️⃣ Tổng số lượt xem trong time range
+        //
         int totalViews = statistics.stream()
                 .mapToInt(TopicViewStatistic::getViewCount)
                 .sum();
 
-        // 🧭 5️⃣ Trả về DTO
+        // Trả về DTO
         StatisticResponse response = new StatisticResponse();
         response.setTotalCount(totalViews);
         response.setNewElementsByPeriod(groupedData);
@@ -151,7 +151,7 @@ public class StatisticServiceImplt implements StatisticService {
             response.setTopicType(summary.getTopicType());
             String name = idToName.get(summary.getTopicId());
             if(name == null) continue;
-
+            response.setTotalViews(summary.getTotalViews().intValue());
             response.setTopicName(name);
             responses.add(response);
         }
