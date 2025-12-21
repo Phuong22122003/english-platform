@@ -146,7 +146,9 @@ services:
       - qdrant
     environment:
       - VECTOR_DB_HOST=qdrant
-      - GOOGLE_API_KEY=AIzaSyDdNkzxGrXRUhoJy-FkxK3LlZnX7M223XY
+      - GOOGLE_API_KEY=AIzaSyBGgVZIod75xjq9nE8I9FOgrTTpKanI2w4
+      - CONTENT_SERVICE_URL=http://content-service:8082
+      - PLAN_SERVICE_CALLBACK_URL=http://learning-service:8083/learning-service/plan/callback
     ports:
       - "5000:5000"
     volumes:
@@ -161,6 +163,7 @@ services:
       - user-service
       - content-service
       - learning-service
+      - agent-service
     environment:
       - USER_SERVICE_URL=http://user-service:8081
       - CONTENT_SERVICE_URL=http://content-service:8082
