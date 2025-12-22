@@ -266,7 +266,7 @@ class AgentService:
             files=files,
             headers=headers
         )
-        
+        print(settings.CONTENT_SERVICE_URL + f"/vocabulary/topics/full")
         for _, f in files:
             content = f[1]
             if isinstance(content, tuple) and hasattr(content[1], "close"):

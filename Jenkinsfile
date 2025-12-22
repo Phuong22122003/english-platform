@@ -11,12 +11,12 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Source Code') {
-            steps {
-                echo '🔹 Checking out source code...'
-                git branch: 'main', url: 'https://github.com/Phuong22122003/english-web.git'
-            }
-        }
+        // stage('Checkout Source Code') {
+        //     steps {
+        //         echo '🔹 Checking out source code...'
+        //         git branch: 'main', url: 'https://github.com/Phuong22122003/english-web.git'
+        //     }
+        // }
         stage('Build Core Module') {
             steps {
                 script {
@@ -79,6 +79,7 @@ pipeline {
                 script {
                     echo 'Starting all services using docker-compose...'
                     sh '''
+                        docker-compose down --remove-orphans
                         docker-compose up -d --build
                     '''
                 }

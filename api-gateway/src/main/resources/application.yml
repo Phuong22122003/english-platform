@@ -2,7 +2,7 @@ server:
     port: 8080
 app:
     api-prefix: /api
-    user-service: ${USER_SERVICE_URL:http://localhost:8081/user-service/}
+    user-service: ${USER_SERVICE_URL:http://localhost:8081}
 spring:
     application:
         name: api-gateway

@@ -10,6 +10,6 @@ import com.english.api_gateway.dto.IntrospectResponse;
 import reactor.core.publisher.Mono;
 
 public interface IdentityClient {
-    @PostExchange(url = "/authenticate/introspect", contentType = MediaType.APPLICATION_JSON_VALUE)
+    @PostExchange(url = "/user-service/authenticate/introspect", contentType = MediaType.APPLICATION_JSON_VALUE)
     Mono<IntrospectResponse> introspect(@RequestBody IntrospectRequest token);
 }

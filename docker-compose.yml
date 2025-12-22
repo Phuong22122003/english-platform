@@ -98,7 +98,7 @@ services:
       - CLOUD_API_KEY=649188967252551
       - CLOUD_API_SECRET=1wSx5Uul_Be3jt9QAG1xG_kexYA
     ports:
-      - "8081:8080"
+      - "8081:8081"
 
   content-service:
     image: phuongnbp/content-service:latest
@@ -114,7 +114,7 @@ services:
       - CLOUD_NAME=dwhlihfnn
       - CLOUD_API_KEY=649188967252551
       - CLOUD_API_SECRET=1wSx5Uul_Be3jt9QAG1xG_kexYA
-      - AGENT_SERVICE_URL=http://agent-service:5000
+      - AGENT_SERVICE_URL=http://agent-service:5000/agent-service
     ports:
       - "8082:8082"
 
@@ -132,9 +132,9 @@ services:
       - CLOUD_NAME=dwhlihfnn
       - CLOUD_API_KEY=649188967252551
       - CLOUD_API_SECRET=1wSx5Uul_Be3jt9QAG1xG_kexYA
-      - USER_SERVICE_URL=http://user-service:8081
-      - CONTENT_SERVICE_URL=http://content-service:8082
-      - LEARNING_SERVICE_URL=http://learning-service:8083
+      - USER_SERVICE_URL=http://user-service:8081/user-service
+      - CONTENT_SERVICE_URL=http://content-service:8082/content-service
+      - AGENT_SERVICE_URL=http://agent-service:5000/agent-service
     ports:
       - "8083:8083"
 
@@ -146,8 +146,8 @@ services:
       - qdrant
     environment:
       - VECTOR_DB_HOST=qdrant
-      - GOOGLE_API_KEY=AIzaSyBGgVZIod75xjq9nE8I9FOgrTTpKanI2w4
-      - CONTENT_SERVICE_URL=http://content-service:8082
+      - GOOGLE_API_KEY=AIzaSyBuTXQOg_fxCKwBnQ4lv8rKbjkfF5dlETo
+      - CONTENT_SERVICE_URL=http://content-service:8082/content-service
       - PLAN_SERVICE_CALLBACK_URL=http://learning-service:8083/learning-service/plan/callback
     ports:
       - "5000:5000"
@@ -156,7 +156,7 @@ services:
 
   api-gateway:
     build: ./api-gateway
-    image: api-gateway:latest
+    image: phuongnbp/api-gateway:latest
     container_name: api-gateway
     restart: always
     depends_on:
@@ -172,7 +172,12 @@ services:
     ports:
       - "8080:8080"
 
-
+  english-learning-web:
+    image: quang3110/english-learning-web:1.0.1
+    container_name: english-learning-web
+    ports:
+      - "80:80"
+    restart: always
 volumes:
   postgres_user_data:
   postgres_content_data:
