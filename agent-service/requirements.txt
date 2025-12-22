@@ -5,13 +5,13 @@ langchain-community
 langchain-google-genai
 qdrant-client
 langchain-qdrant
-sentence-transformers
+# sentence-transformers
 langgraph
 soundfile
 transformers
 google-genai
 eng_to_ipa
-torchaudio
+# torchaudio
 python-multipart
 gtts
 pydub
