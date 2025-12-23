@@ -1,0 +1,148 @@
+version: "3.9"
+
+services:
+  # =========================
+  # 🗄 DATABASE SERVICES
+  # =========================
+  postgres-service:
+    image: postgres:16
+    container_name: postgres-service
+    restart: always
+    environment:
+      POSTGRES_DB: userservice
+      POSTGRES_USER: dbowner
+      POSTGRES_PASSWORD: dbowner
+      TZ: Asia/Ho_Chi_Minh
+      PGTZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    command: ["postgres", "-c", "timezone=Asia/Ho_Chi_Minh"]
+
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    restart: always
+    ports:
+      - "6333:6333"   # REST API
+      - "6334:6334"   # gRPC
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+  # =========================
+  # ⚙️ APPLICATION SERVICES
+  # =========================
+  user-service:
+    image: phuongnbp/user-service:latest
+    container_name: user-service
+    restart: always
+    depends_on:
+      - postgres-service
+    environment:
+      - DB_CONNECTION_URL=jdbc:postgresql://postgres-service:5432/userservice
+      - DB_CONNECTION_USERNAME=dbowner
+      - DB_CONNECTION_PASSWORD=dbowner
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MAIL_USERNAME=hnguyenphuong09@gmail.com
+      - MAIL_PASSWORD=igtl judw itoi lpnw
+      - SIGNER_KEY=t47lu0FHQY5XHLeC5uViwOtAuzBT0cpkFdDgWZfrRHF1Y2e6XB2oVVRHzKyb/9Fa
+      - CLOUD_NAME=dwhlihfnn
+      - CLOUD_API_KEY=649188967252551
+      - CLOUD_API_SECRET=1wSx5Uul_Be3jt9QAG1xG_kexYA
+    ports:
+      - "8081:8081"
+
+  content-service:
+    image: phuongnbp/content-service:latest
+    container_name: content-service
+    restart: always
+    depends_on:
+      - postgres-service
+      - redis
+    environment:
+      - DB_CONNECTION_URL=jdbc:postgresql://postgres-service:5432/contentservice
+      - DB_CONNECTION_USERNAME=dbowner
+      - DB_CONNECTION_PASSWORD=dbowner
+      - CLOUD_NAME=dwhlihfnn
+      - CLOUD_API_KEY=649188967252551
+      - CLOUD_API_SECRET=1wSx5Uul_Be3jt9QAG1xG_kexYA
+      - AGENT_SERVICE_URL=http://agent-service:5000/agent-service
+    ports:
+      - "8082:8082"
+
+  learning-service:
+    image: phuongnbp/learning-service:latest
+    container_name: learning-service
+    restart: always
+    depends_on:
+      - postgres-service
+      - redis
+    environment:
+      - DB_CONNECTION_URL=jdbc:postgresql://postgres-service:5432/learningservice
+      - DB_CONNECTION_USERNAME=dbowner
+      - DB_CONNECTION_PASSWORD=dbowner
+      - CLOUD_NAME=dwhlihfnn
+      - CLOUD_API_KEY=649188967252551
+      - CLOUD_API_SECRET=1wSx5Uul_Be3jt9QAG1xG_kexYA
+      - USER_SERVICE_URL=http://user-service:8081/user-service
+      - CONTENT_SERVICE_URL=http://content-service:8082/content-service
+      - AGENT_SERVICE_URL=http://agent-service:5000/agent-service
+    ports:
+      - "8083:8083"
+
+  agent-service:
+    image: phuongnbp/agent-service:latest
+    container_name: agent-service
+    restart: always
+    depends_on:
+      - qdrant
+    environment:
+      - VECTOR_DB_HOST=qdrant
+      - GOOGLE_API_KEY=AIzaSyBuTXQOg_fxCKwBnQ4lv8rKbjkfF5dlETo
+      - CONTENT_SERVICE_URL=http://content-service:8082/content-service
+      - PLAN_SERVICE_CALLBACK_URL=http://learning-service:8083/learning-service/plan/callback
+    ports:
+      - "5000:5000"
+    volumes:
+      - agent_service_data:/data
+
+  api-gateway:
+    build: ./api-gateway
+    image: phuongnbp/api-gateway:latest
+    container_name: api-gateway
+    restart: always
+    depends_on:
+      - user-service
+      - content-service
+      - learning-service
+      - agent-service
+    environment:
+      - USER_SERVICE_URL=http://user-service:8081
+      - CONTENT_SERVICE_URL=http://content-service:8082
+      - LEARNING_SERVICE_URL=http://learning-service:8083
+      - AGENT_SERVICE_URL=http://agent-service:5000
+    ports:
+      - "8084:8080"
+
+  english-learning-web:
+    image: quang3110/english-learning-web:1.0.1
+    container_name: english-learning-web
+    ports:
+      - "80:80"
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_storage:
+  agent_service_data:
