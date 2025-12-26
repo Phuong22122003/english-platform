@@ -47,5 +47,5 @@ async def check_pronunciation(file:UploadFile=File(...), text:str=Form(...)):
     audio_array = np.array(audio.get_array_of_samples()).astype(np.float32)
     audio_array /= audio.max_possible_amplitude
     samplerate = audio.frame_rate
-    result = pronoun_service.get_ipa_confidence(text_correct=text,audio_array=audio_array,sample_rate = samplerate)
+    result = pronoun_service.get_ipa_confidence(text_input=text,audio_array=audio_array,sample_rate = samplerate)
     return result
