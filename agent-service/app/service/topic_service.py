@@ -46,7 +46,8 @@ class TopicService:
         )
     
     def search(self, query:str) ->list:
-        results = self.vector_store.similarity_search(query=query,k=5)
+        results = self.vector_store.similarity_search(query=query,k=7)
+        print("==========Search results:", results)
         topics = []
         for result in results:
             metadata = result.metadata

@@ -54,8 +54,15 @@ def get_plan_group_prompt(plan: str, existingGroups: str = "[]", replaceIndex: i
     Your task:
     - If no groups exist yet (existingGroups is empty), create a full list of study groups for the user's learning plan.
     - If existingGroups is not empty, **keep all groups unchanged except the one at replaceIndex**, which must be regenerated.
-    - If any group in existingGroups already includes a "details" field, **keep those details exactly as they are**.
+    - If a group already includes a "details" field:
+        • **Preserve details ONLY if each item has a valid structure and realistic topicId**
+        • **If details are invalid, remove the entire "details" field**
     - Always return the complete, final list of groups (not only the new one).
+
+    HARD CONSTRAINT (MUST FOLLOW):
+    - The final number of groups MUST be **at most 5 groups**.
+    - NEVER return more than 5 groups under any circumstance.
+    - If the plan duration is long, merge related learning themes instead of creating extra groups.
 
     --- User Information ---
     {json.dumps(plan['user_info'], ensure_ascii=False, indent=2)}
@@ -139,6 +146,9 @@ def get_plan_detail_prompt(group, plan, topics, existTopic) -> str:
       [
         {{"topicId": "string", "approved": true/false, "reason": "string"}}
       ]
+    - You may approve **AT MOST 4 topics** for this group.
+    - If more than 4 topics are suitable, approve ONLY the **best 4 most relevant** ones.
+    - For topics not approved due to the limit, set approved=false and explain briefly.
 
     Return ONLY the JSON array. No explanations outside JSON.
     """

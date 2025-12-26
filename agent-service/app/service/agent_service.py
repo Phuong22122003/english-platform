@@ -459,6 +459,13 @@ class AgentService:
         return plan
 
     async def plan_group(self, plan: Plan, replace_index: int = -1):
+        def sanitize_details(group, valid_topic_ids: set):
+            group["details"] = [
+                d for d in group.get("details", [])
+                if d.get("topicId") in valid_topic_ids
+            ]
+            if not group["details"]:
+                group.pop("details", None)
         print("Creating plan groups...")
         client = await MCPClientHolder.get_client()
 
@@ -482,10 +489,20 @@ class AgentService:
             plan_groups = json.loads(plan_group_json)
             print(" Generated plan groups:", plan_groups)
             plan["planGroups"] = plan_groups
+            for g in plan_groups:
+                if not g.get("details"):
+                    continue
+
+                q = f"{g.get('name','')} {g.get('description','')} {plan.get('level','')}"
+                topics = topic_service.search(q)  # hoặc search(q, level=plan.get("level"))
+                valid_topic_ids = {t["id"] for t in topics}
+
+                # 3) Remove những topicId không hợp lệ (vd PRESENT_SIMPLE)
+                sanitize_details(g, valid_topic_ids)
         except Exception as e:
             print(" JSON parse error in plan_group:", e)
             plan_groups = existing_groups  # fallback giữ nhóm cũ
-
+        
         return plan
 
     async def plan_detail(self, plan: dict):
