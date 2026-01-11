@@ -5,8 +5,6 @@ import com.english.exception.NotFoundException;
 import com.english.learning_service.dto.request.ExamHistoryRequest;
 import com.english.learning_service.dto.request.UserAnswerRequest;
 import com.english.learning_service.dto.response.ExamHistoryResponse;
-import com.english.learning_service.dto.response.GetGrammarTestQuestionsByTestIdResponse;
-import com.english.learning_service.dto.response.GetVocabularyTestQuestionResponse;
 import com.english.learning_service.dto.response.QuestionResponse;
 import com.english.learning_service.entity.ExamHistory;
 import com.english.learning_service.entity.UserAnswer;
@@ -63,8 +61,8 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
         Map<String,QuestionResponse> questionMap = new HashMap<>();
         switch (request.getTestType()){
             case ItemTypeEnum.VOCABULARY -> {
-                GetVocabularyTestQuestionResponse vocab = vocabularyClient.getTestQuestionsByTestId(examHistory.getTestId());
-                examHistory.setName(vocab.getTestName());
+                VocabularyTestResponse vocab = vocabularyClient.getTestQuestionsByTestId(examHistory.getTestId());
+                examHistory.setName(vocab.getName());
                 examHistory.setDuration(vocab.getDuration());
                 for(var q: vocab.getQuestions()){
                     questionMap.put(q.getId(),QuestionResponse.builder()
@@ -78,10 +76,10 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                 break;
             }
             case ItemTypeEnum.GRAMMAR -> {
-                GetGrammarTestQuestionsByTestIdResponse grammar = grammarClient.getTestQuestionsByTestId(examHistory.getTestId());
-                examHistory.setName(grammar.getTestName());
+                GrammarTestResponse grammar = grammarClient.getTestQuestionsByTestId(examHistory.getTestId());
+                examHistory.setName(grammar.getName());
                 examHistory.setDuration(grammar.getDuration());
-                for(var q: grammar.getGrammarTestQuestions()){
+                for(var q: grammar.getQuestions()){
                     questionMap.put(q.getId(),QuestionResponse.builder()
                             .options(q.getOptions())
                             .correctAnswer(q.getCorrectAnswer())

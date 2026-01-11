@@ -81,46 +81,32 @@ public class GrammarServiceImpl implements GrammarService {
     }
 
     @Override
-    @Transactional
-    public GetGrammarTopicResponse getGrammarsByTopicId(String topicId) {
+    public GrammarTopicResponse getGrammarsByTopicId(String topicId) {
+        GrammarTopic topic = grammarTopicRepository.findById(topicId).orElseThrow(()-> new NotFoundException("Topic not found"));
         List<Grammar> grammars = grammarRepository.findByTopicId(topicId);
-        Optional<GrammarTopic> topicOpt = grammarTopicRepository.findById(topicId);
         topicViewStatisticService.addTopic(topicId, TopicType.GRAMMAR);
-        return topicOpt.map(topic -> GetGrammarTopicResponse.builder()
-                        .topicId(topic.getId())
-                        .name(topic.getName())
-                        .grammars(grammarMapper.toGrammarResponses(grammars))
-                        .build())
-                .orElse(null);
+        GrammarTopicResponse response = grammarMapper.toGrammarTopicResponse(topic);
+        response.setGrammars(grammarMapper.toGrammarResponses(grammars));
+        return response;
     }
 
     @Override
-    public GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size) {
+    public GrammarResponse getTestsByGrammarId(String grammarId, int page, int size) {
+        Grammar grammar = grammarRepository.findById(grammarId).orElseThrow(()->new NotFoundException("Grammar not found"));
         Page<GrammarTest> tests = grammarTestRepository.findByGrammarId(grammarId, PageRequest.of(page, size));
         List<GrammarTestResponse> testResponses = grammarMapper.toGrammarTestResponses(tests.getContent());
-        Optional<Grammar> grammarOtp = grammarRepository.findById(grammarId);
-        return grammarOtp.map(grammar -> GetTestsByGrammarIdResponse.builder()
-                .grammarTests(new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements()))
-                .grammarName(grammar.getTitle())
-                .grammarId(grammar.getId())
-                .build()).orElse(null);
+        GrammarResponse response = grammarMapper.toGrammarResponse(grammar);
+        response.setGrammarTests(new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements()));
+        return  response;
     }
 
     @Override
-    public GetGrammarTestQuestionsByTestIdResponse getTestQuestionsByTestId(String testId) {
+    public GrammarTestResponse getTestQuestionsByTestId(String testId) {
         List<GrammarTestQuestion> questions = grammarTestQuestionRepository.findByTestId(testId);
-        GrammarTest grammarTest = null;
-        if (questions.size() > 0) {
-            grammarTest = questions.getFirst().getTest();
-        }
-        return GetGrammarTestQuestionsByTestIdResponse.builder()
-                .duration(grammarTest.getDuration())
-                .grammarTestQuestions(grammarMapper.toGrammarTestQuestionResponses(questions))
-                .testName(grammarTest.getName())
-                .testId(grammarTest.getId())
-                .grammarName(grammarTest.getGrammar().getTitle())
-                .grammarId(grammarTest.getGrammar().getId())
-                .build();
+        GrammarTest grammarTest = grammarTestRepository.findById(testId).orElseThrow(()-> new NotFoundException("Test not found"));
+        GrammarTestResponse response = grammarMapper.toGrammarTestResponse(grammarTest);
+        response.setQuestions(grammarMapper.toGrammarTestQuestionResponses(questions));
+        return  response;
     }
 
     @Override

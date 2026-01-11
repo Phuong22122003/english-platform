@@ -23,4 +23,5 @@ public class VocabTopicResponse {
     private String createdAt;
     private Level level;
     List<VocabularyResponse> vocabularies;
+    List<VocabularyTestResponse> tests;
 }

@@ -87,15 +87,13 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
     @Override
     @Transactional
-    public GetVocabularyTopicResponse getVocabulariesByTopicId(String topicId) {
+    public VocabTopicResponse getVocabulariesByTopicId(String topicId) {
+        VocabularyTopic topic = vocabularyTopicRepository.findById(topicId).orElseThrow(()-> new NotFoundException("Topic not found"));
         List<Vocabulary> vocabularies = vocabularyRepository.findByTopicId(topicId);
-        Optional<VocabularyTopic> topicOpt = vocabularyTopicRepository.findById(topicId);
         topicViewStatisticService.addTopic(topicId, TopicType.VOCABULARY);
-        return topicOpt.map(vocabularyTopic -> GetVocabularyTopicResponse.builder()
-                .name(vocabularyTopic.getName())
-                .topicId(vocabularyTopic.getId())
-                .vocabularies(vocabularyMapper.toVocabularyResponses(vocabularies))
-                .build()).orElse(null);
+        VocabTopicResponse response = vocabularyMapper.toVocabTopicResponse(topic);
+        response.setVocabularies(vocabularyMapper.toVocabularyResponses(vocabularies));
+        return response;
     }
 
     @Override
@@ -140,29 +138,22 @@ public class VocabularyServiceImpl implements VocabularyService {
         };
     }
     @Override
-    public GetTestsVocabByTopicIdResponse getTestsByTopicId(String topicId, int page, int size) {
+    public VocabTopicResponse getTestsByTopicId(String topicId, int page, int size) {
+        VocabularyTopic topic = vocabularyTopicRepository.findById(topicId).orElseThrow(()-> new NotFoundException("Topic not found"));
         Page<VocabularyTest> tests = vocabularyTestRepository.findByTopicId(topicId, PageRequest.of(page, size));
         List<VocabularyTest> testList = tests.getContent();
         List<VocabularyTestResponse> testResponses = vocabularyMapper.toVocabularyTestResponses(testList);
-        Optional<VocabularyTopic> topicOtp = vocabularyTopicRepository.findById(topicId);
-        return topicOtp.map(topic -> GetTestsVocabByTopicIdResponse.builder()
-                .vocabularyTests(new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements()))
-                .topicName(topic.getName())
-                .topicId(topicId)
-                .build()).orElse(null);
+        VocabTopicResponse response = vocabularyMapper.toVocabTopicResponse(topic);
+        response.setTests(testResponses);
+        return  response;
     }
     @Override
-    public GetVocabularyTestQuestionResponse getTestQuestionsByTestId(String testId) {
+    public VocabularyTestResponse getTestQuestionsByTestId(String testId) {
+        VocabularyTest test = vocabularyTestRepository.findById(testId).orElseThrow(()-> new NotFoundException("Test not found"));
         List<VocabularyTestQuestion> questions = vocabularyTestQuestionRepository.findByTestId(testId);
-        Optional<VocabularyTest> vocabularyTestOtp = vocabularyTestRepository.findById(testId);
-        return  vocabularyTestOtp.map(vocabularyTest -> GetVocabularyTestQuestionResponse.builder()
-                .topicName(vocabularyTest.getTopic().getName())
-                .topicId(vocabularyTest.getTopic().getId())
-                .duration(vocabularyTest.getDuration())
-                .testId(vocabularyTest.getId())
-                .testName(vocabularyTest.getName())
-                .questions(vocabularyMapper.toVocabularyTestQuestionResponses(questions))
-                .build()).orElse(null);
+        VocabularyTestResponse response = vocabularyMapper.toVocabularyTestResponse(test);
+        response.setQuestions(vocabularyMapper.toVocabularyTestQuestionResponses(questions));
+        return  response;
     }
     @Override
     @Transactional

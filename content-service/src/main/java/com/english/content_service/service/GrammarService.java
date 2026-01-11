@@ -20,15 +20,15 @@ public interface GrammarService {
     GrammarTopicResponse updateTopic(String topicId, GrammarTopicRequest request, MultipartFile image);
     void deleteTopicById(String id);
     //grammar
-    GetGrammarTopicResponse getGrammarsByTopicId(String topicId);
+    GrammarTopicResponse getGrammarsByTopicId(String topicId);
     GrammarResponse addGrammar(String topicId, GrammarRequest request);
     GrammarResponse updateGrammar(String grammarId,GrammarRequest request);
     void deleteGrammarById(String id);
     //test
-    GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size);
+    GrammarResponse getTestsByGrammarId(String grammarId, int page, int size);
     GrammarTestResponse addTest(String grammarTopic, GrammarTestRequest request);
     GrammarTestResponse addTest(String grammarTopic, MultipartFile excelFile);
-    GetGrammarTestQuestionsByTestIdResponse getTestQuestionsByTestId(String testId);
+    GrammarTestResponse getTestQuestionsByTestId(String testId);
     List<GrammarTestResponse> getTestsByIds(List<String> ids);
     void deleteTestById(String id);
     GrammarTestResponse updateGrammarTest(String testId, GrammarTestRequest request);

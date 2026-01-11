@@ -20,7 +20,7 @@ public interface VocabularyService {
     public void deleteTopic(String topicId);
     public List<VocabTopicResponse> getTopicsByIds(List<String> ids);
     //vocab
-    public GetVocabularyTopicResponse getVocabulariesByTopicId(String topicId);
+    public VocabTopicResponse getVocabulariesByTopicId(String topicId);
     public List<VocabularyResponse> addVocabularies(String topicId,MultipartFile excelFile,List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
     public List<VocabularyResponse> addVocabularies(String topicId, List<VocabularyRequest> requests, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
     public List<VocabularyResponse> updateVocabularies(String topicId, List<VocabularyRequest> requests, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
@@ -28,8 +28,8 @@ public interface VocabularyService {
     public void deleteVocabulary(String vocabId);
 
     //test
-    public GetTestsVocabByTopicIdResponse getTestsByTopicId(String topicId, int page, int size);
-    public GetVocabularyTestQuestionResponse getTestQuestionsByTestId(String testId);
+    public VocabTopicResponse getTestsByTopicId(String topicId, int page, int size);
+    public VocabularyTestResponse getTestQuestionsByTestId(String testId);
     public VocabularyTestResponse addTest(String topicId,VocabularyTestRequest vocabularyTestRequest, List<MultipartFile> imageFiles);
     public VocabularyTestResponse addTest(String topicId,MultipartFile excelFile, List<MultipartFile> imageFiles);
     public VocabularyTestResponse updateTest(String testId,VocabularyTestRequest vocabularyTestRequest, List<MultipartFile> imageFiles);

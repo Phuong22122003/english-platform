@@ -1,2 +1,4 @@
 .venv
 qdrant_storage
+.idea
+.vscode
