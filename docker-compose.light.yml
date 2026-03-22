@@ -26,6 +26,14 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    deploy:
+      resources:
+        limits:
+          memory: 300M  # Giới hạn cứng của Docker cho container này
     volumes:
       - redis_data:/data
   qdrant:
@@ -47,6 +55,7 @@ services:
     restart: always
     depends_on:
       - postgres-service
+      - redis
     environment:
       - DB_CONNECTION_URL=jdbc:postgresql://postgres-service:5432/userservice
       - DB_CONNECTION_USERNAME=dbowner
@@ -77,6 +86,7 @@ services:
       - CLOUD_API_KEY=649188967252551
       - CLOUD_API_SECRET=1wSx5Uul_Be3jt9QAG1xG_kexYA
       - AGENT_SERVICE_URL=http://agent-service:5000/agent-service
+      - REDIS_HOST=redis
     ports:
       - "8082:8082"
 
@@ -132,10 +142,10 @@ services:
       - LEARNING_SERVICE_URL=http://learning-service:8083
       - AGENT_SERVICE_URL=http://agent-service:5000
     ports:
-      - "8084:8080"
+      - "8080:8080"
 
   english-learning-web:
-    image: quang3110/english-learning-web:1.0.1
+    image: phuongnbp/english-web-ui:latest
     container_name: english-learning-web
     ports:
       - "80:80"

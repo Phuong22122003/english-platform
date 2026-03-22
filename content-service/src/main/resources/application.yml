@@ -12,6 +12,21 @@ spring:
     url: ${DB_CONNECTION_URL:jdbc:postgresql://localhost:5433/contentservice}
     username: ${DB_CONNECTION_USERNAME:dbowner}
     password: ${DB_CONNECTION_PASSWORD:dbowner}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+      connect-timeout: 200ms # Thời gian tối đa để kết nối
+      timeout: 500ms         # Thời gian tối đa đợi phản hồi
+      lettuce:
+        pool:
+          max-active: 8      # Số lượng kết nối tối đa trong pool
+          max-idle: 8
+          min-idle: 0
+      repositories:
+        enabled: false
+    cache:
+      type: redis              # Khai báo sử dụng Redis cho @Cacheable
 
 server:
   port: 8082
@@ -19,9 +34,9 @@ server:
     context-path: /content-service
 
 cloudinary:
-  cloud_name: ${CLOUD_NAME:dwhlihfnn}
-  api_key: ${CLOUD_API_KEY:649188967252551}
-  api_secret: ${CLOUD_API_SECRET:1wSx5Uul_Be3jt9QAG1xG_kexYA}
+  cloud_name: ${CLOUD_NAME:your_cloud_name}
+  api_key: ${CLOUD_API_KEY:your_cloud_key}
+  api_secret: ${CLOUD_API_SECRET:your_cloud_secret_key}
 
 app:
   services:
