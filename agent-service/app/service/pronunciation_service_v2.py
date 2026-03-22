@@ -127,10 +127,9 @@ class PronunciationService:
         print(f"Predicted tokens: {pred_tokens}\n")
         # return
         # ====== 3. Dùng LLM để phân tích alignment ======
-        alignment_result = self.llm_alignment_analysis(
+        alignment_result = self.best_alignment_analysis(
             correct_ipa_tokens, 
-            pred_tokens,
-            self.llm
+            pred_tokens
         )
         
         # Handle cannot align case
@@ -327,6 +326,51 @@ class PronunciationService:
             'explain': f"DTW alignment: {matches}/{len(correct_chars)} matched",
             'alignment': alignment
         }
+    # {{"correct_index": 0, "correct_char": "h",  "pred_index": 0, "pred_char": "h",  "is_match": "TRUE"}},
+    # "can_align": true/false,
+    # "explain": "A summary describing how well the user's pronunciation matches and any IPA deviations.",
+    # "alignment": [
+    #     {{"correct_index": 0, "correct_char": "h",  "pred_index": 0, "pred_char": "h",  "is_match": "TRUE"}},
+    #     {{"correct_index": 1, "correct_char": "ɛ",  "pred_index": 1, "pred_char": "ɛ",  "is_match": "TRUE"}},
+    #     ...
+    # ]
+    def best_alignment_analysis(self, correct_tokens: list, pred_tokens: list):
+        temp_pred_tokens = list(pred_tokens)
+        res = {
+            "alignment": [],
+            "can_align": False
+        }
+        total_match_token = 0
+
+        for correct_index, token in enumerate(correct_tokens):
+            correct_key = next(iter(token))
+
+            for current_index, pred_token in enumerate(temp_pred_tokens):
+                pred_key = next(iter(pred_token))
+                pred_index = pred_token[pred_key]
+
+                if correct_key == pred_key:
+                    res["alignment"].append({
+                        "correct_index": correct_index,
+                        "correct_char": correct_key,
+                        "pred_index": pred_index,
+                        "pred_char": pred_key,
+                        "is_match": "TRUE"
+                    })
+                    total_match_token += 1
+                    del temp_pred_tokens[0: current_index + 1]
+                    break
+            else:
+                res["alignment"].append({
+                    "correct_index": correct_index,
+                    "correct_char": correct_key,
+                    "is_match": "NOT EXIST"
+                })
+
+        res['can_align'] = total_match_token > len(correct_tokens) / 2
+        print(res)
+        return res
+
     def llm_alignment_analysis(self, correct_tokens:dict, pred_tokens:dict, client):
         """
         Use LLM to analyze alignment between correct IPA and predicted IPA
