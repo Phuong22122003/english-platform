@@ -12,4 +12,5 @@ public interface FavoriteService {
     public FavoriteResponse addFavorite(FavoriteRequest request);
     public void deleteFavorite(String favoriteId);
     public List<FavoriteResponse> getFavorites(FilterType filterType);
+    public List<FavoriteResponse> getFavoriteIds(FilterType filterType);
 }

@@ -7,12 +7,13 @@ import com.english.learning_service.service.FavoriteService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/favorite")
+@RequestMapping("/favorites")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class FavoriteController {
@@ -33,4 +34,10 @@ public class FavoriteController {
     public List<FavoriteResponse> getFavorites(@RequestParam(required = false) FilterType filterType) {
         return favoriteService.getFavorites(filterType);
     }
+
+    @GetMapping("/ids")
+    public ResponseEntity<List<FavoriteResponse>> getFavoriteIds(@RequestParam(required = false) FilterType filterType){
+        return ResponseEntity.ok().body(favoriteService.getFavoriteIds(filterType));
+    }
+
 }

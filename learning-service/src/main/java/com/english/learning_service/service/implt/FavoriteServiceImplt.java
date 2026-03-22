@@ -134,5 +134,41 @@ public class FavoriteServiceImplt implements FavoriteService {
         return responses;
     }
 
+    @Override
+    public List<FavoriteResponse> getFavoriteIds(FilterType filterType) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+
+        List<Favorite> favorites;
+        if (filterType.equals(FilterType.ALL)) {
+            favorites = favoriteRepository.findByUserId(userId);
+        } else {
+            favorites = favoriteRepository.findByUserIdAndItemType(userId, ItemTypeEnum.map(filterType));
+        }
+
+        if (favorites.isEmpty()) {
+            return List.of();
+        }
+        List<FavoriteResponse> response = new ArrayList<>();
+        for(var fav: favorites){
+            FavoriteResponse favoriteResponse = favoriteMapper.toFavoriteResponse(fav);
+            if(fav.getItemType().equals(ItemTypeEnum.VOCABULARY)){
+                var vocabTopic = new VocabTopicResponse();
+                vocabTopic.setId(fav.getItemId());
+                favoriteResponse.setVocabTopic(vocabTopic);
+            } else if (fav.getItemType().equals(ItemTypeEnum.GRAMMAR)) {
+                var grammarTopic = new GrammarTopicResponse();
+                grammarTopic.setId(fav.getItemId());
+                favoriteResponse.setGrammarTopic(grammarTopic);
+            }else{
+                var listeningTopic = new ListeningTopicResponse();
+                listeningTopic.setId(fav.getItemId());
+                favoriteResponse.setListeningTopic(listeningTopic);
+            }
+            response.add(favoriteResponse);
+        }
+        return response;
+    }
+
 
 }
