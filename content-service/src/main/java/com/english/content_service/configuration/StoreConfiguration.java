@@ -20,4 +20,6 @@ public class StoreConfiguration {
     public FileService fileService() {
         return new FileService(cloudName,apiKey,apiSecret);
     }
+
+
 }

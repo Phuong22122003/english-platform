@@ -1,6 +1,7 @@
 package com.english.api_gateway.configuration;
 
 import com.english.api_gateway.service.IdentityService;
+import io.netty.handler.timeout.ReadTimeoutException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,9 +17,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,8 +54,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
         if (CollectionUtils.isEmpty(authHeader)) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized access"));
         }
 
         String token = authHeader.getFirst().replace("Bearer ", "");
@@ -58,14 +62,9 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             if (introspectResponseApiResponse.isAuthenticated()) {
                 return chain.filter(exchange);
             } else {
-                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                return exchange.getResponse().setComplete();
+                return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized access"));
             }
-        }).onErrorResume(throwable -> {
-            log.info(throwable.getMessage());
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
-        });
+        }).onErrorResume(Mono::error);
     }
 
     private boolean isPublicEndPoint(ServerHttpRequest request) {

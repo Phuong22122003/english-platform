@@ -31,6 +31,7 @@ public class GlobalExceptionHandler {
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         apiResponse.setMessage("Server error. Please try again");
+        log.info(runtimeException.getMessage());
         return  ResponseEntity.internalServerError().body(apiResponse);
     }
 
