@@ -52,7 +52,7 @@ public class GrammarServiceImpl implements GrammarService {
     GrammarMapper grammarMapper;
     TopicViewStatisticService topicViewStatisticService;
     FileService fileService;
-    AgentService agentService;
+//    AgentService agentService;
     EntityManager entityManager;
 
     @Override
@@ -179,7 +179,7 @@ public class GrammarServiceImpl implements GrammarService {
         }
         try {
             topic = grammarTopicRepository.save(topic);
-            agentService.addTopicToVectorDB(topic);
+//            agentService.addTopicToVectorDB(topic);
         } catch (Exception e) {
             if(topic.getPublicId()!=null) fileService.deleteFile(topic.getPublicId());
             throw new RuntimeException(e);
@@ -240,7 +240,7 @@ public class GrammarServiceImpl implements GrammarService {
         entityManager.flush();
         entityManager.clear();
         grammarTopicRepository.deleteById(topicId);
-        agentService.deleteTopicFromVectorDB(topicId);
+//        agentService.deleteTopicFromVectorDB(topicId);
     }
 
 

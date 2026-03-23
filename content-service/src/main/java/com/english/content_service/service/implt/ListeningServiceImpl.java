@@ -54,7 +54,7 @@ public class ListeningServiceImpl implements ListeningService {
     ListeningRepository listeningRepository;
     ListeningTestRepository listeningTestRepository;
     ListeningTestQuestionRepository listeningTestQuestionRepository;
-    AgentService agentService;
+//    AgentService agentService;
     TopicViewStatisticService topicViewStatisticService;
 
     @Override
@@ -96,7 +96,7 @@ public class ListeningServiceImpl implements ListeningService {
 
         try {
             topic = listeningTopicRepository.save(topic);
-            agentService.addTopicToVectorDB(topic);
+//            agentService.addTopicToVectorDB(topic);
         } catch (Exception e) {
             if(topic.getPublicId()!=null) fileService.deleteFile(topic.getPublicId());
             throw new RuntimeException(e);
@@ -141,7 +141,7 @@ public class ListeningServiceImpl implements ListeningService {
 
         listeningTopicRepository.delete(topic);
 
-        agentService.deleteTopicFromVectorDB(topicId);
+//        agentService.deleteTopicFromVectorDB(topicId);
 
         try {
             for(var listening: listeningList){

@@ -14,7 +14,7 @@ import com.english.learning_service.entity.Plan;
 import com.english.learning_service.entity.PlanDetail;
 import com.english.learning_service.entity.PlanGroup;
 import com.english.learning_service.enums.ItemTypeEnum;
-import com.english.learning_service.httpclient.AgentClient;
+//import com.english.learning_service.httpclient.AgentClient;
 import com.english.learning_service.httpclient.GrammarClient;
 import com.english.learning_service.httpclient.ListeningClient;
 import com.english.learning_service.httpclient.VocabularyClient;
@@ -61,7 +61,7 @@ public class PlanServiceImplt implements PlanService {
     PlanDetailRepository planDetailRepository;
     PlanGroupRepository planGroupRepository;
     ExamHistoryRepository examHistoryRepository;
-    AgentClient agentClient;
+//    AgentClient agentClient;
     ListeningClient listeningClient;
     VocabularyClient vocabularyClient;
     GrammarClient grammarClient;
@@ -104,6 +104,7 @@ public class PlanServiceImplt implements PlanService {
     }
 
     @Override
+    @Deprecated
     public SseEmitter addPlanByAgent(PlanIntentRequest request) {
 
         String userId = JwtUtils.extractUserId(request.getJwt());

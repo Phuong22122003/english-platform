@@ -34,12 +34,14 @@ public class PlanController {
     }
 
     @PostMapping("/callback")
+    @Deprecated
     public ResponseEntity<?> callBack(@RequestBody(required = false) CallBackRequest request) {
             planService.sendNotification(request);
         return ResponseEntity.ok(null);
     }
 
     @GetMapping("/agent-generation")
+    @Deprecated
     public SseEmitter addPlan(PlanIntentRequest request){
         return planService.addPlanByAgent(request);
     }

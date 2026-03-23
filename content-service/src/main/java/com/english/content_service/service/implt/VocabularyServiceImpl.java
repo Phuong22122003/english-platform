@@ -60,7 +60,7 @@ public class VocabularyServiceImpl implements VocabularyService {
     VocabularyTestQuestionRepository vocabularyTestQuestionRepository;
     VocabularyMapper vocabularyMapper;
     FileService fileService;
-    AgentService agentService;
+//    AgentService agentService;
     TopicViewStatisticService topicViewStatisticService;
     RedisTemplate<String, Object> redisTemplate;
 
@@ -203,7 +203,7 @@ public class VocabularyServiceImpl implements VocabularyService {
         topic.setCreatedAt(LocalDateTime.now());
         try{
             VocabularyTopic savedTopic = vocabularyTopicRepository.save(topic);
-            agentService.addTopicToVectorDB(savedTopic);
+//            agentService.addTopicToVectorDB(savedTopic);
             return vocabularyMapper.toVocabTopicResponse(savedTopic);
         } catch (Exception e) {
             if(fileResponse!=null)
@@ -248,7 +248,7 @@ public class VocabularyServiceImpl implements VocabularyService {
         this.vocabularyTestQuestionRepository.deleteByTopicId(topicId);
         this.vocabularyTestRepository.deleteByTopicId(topicId);
         this.vocabularyTopicRepository.delete(topic);
-        this.agentService.deleteTopicFromVectorDB(topicId);
+//        this.agentService.deleteTopicFromVectorDB(topicId);
         try{
             this.fileService.deleteFile(topic.getPublicId());
             this.fileService.deleteFiles(publicIds);

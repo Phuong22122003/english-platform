@@ -11,7 +11,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @Service
 public interface PlanService {
     PlanResponse addPlan(PlanRequest request);
+    @Deprecated(since = "Planning by agent is removed")
     SseEmitter addPlanByAgent(PlanIntentRequest request);
+    @Deprecated(since = "Planning by agent is removed")
     void sendNotification(CallBackRequest planRequest);
     Page<PlanResponse> getPlan(int page, int size);
     PlanResponse getPlanDetail(String planId);
