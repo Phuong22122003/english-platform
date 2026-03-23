@@ -36,7 +36,7 @@ public class StatisticServiceImplt implements StatisticService {
     VocabularyService vocabularyService;
     ListeningService listeningService;
     @Override
-    public StatisticResponse getTopicViews(TimeRange timeRange) {
+    public StatisticResponse getTopicViewTimeSeries(TimeRange timeRange) {
         LocalDate now = LocalDate.now();
         LocalDate startDate;
         LocalDate endDate = now;
@@ -105,7 +105,7 @@ public class StatisticServiceImplt implements StatisticService {
     *  Get top n topics with the most views
     * */
     @Override
-    public List<TopicViewSummaryResponse> getTopNTopics(int n) {
+    public List<TopicViewSummaryResponse> getTopTopicRanking(int n) {
         List<TopicViewSummary> topicViewSummaries = topicViewStatisticRepository.findTopTopics(PageRequest.of(0, n));
         List<String> vocabIds = new ArrayList<>();
         List<String> listeningIds = new ArrayList<>();

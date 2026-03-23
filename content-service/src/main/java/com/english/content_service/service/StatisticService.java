@@ -9,6 +9,6 @@ import java.util.List;
 
 @Service
 public interface StatisticService {
-    StatisticResponse getTopicViews(TimeRange timeRange);
-    public List<TopicViewSummaryResponse> getTopNTopics(int n);
+    StatisticResponse getTopicViewTimeSeries(TimeRange timeRange);
+    public List<TopicViewSummaryResponse> getTopTopicRanking(int n);
 }

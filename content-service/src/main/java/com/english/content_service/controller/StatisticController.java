@@ -17,18 +17,18 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/statistic")
+@RequestMapping("/statistic/topics")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Slf4j
 public class StatisticController {
     StatisticService statisticService;
-    @GetMapping("/topic-view")
-    public ResponseEntity<StatisticResponse> getTopicViews(@RequestParam("time_range") TimeRange timeRange) {
-        return ResponseEntity.ok(statisticService.getTopicViews(timeRange));
+    @GetMapping("/views/time-series")
+    public ResponseEntity<StatisticResponse> getTopicViewTimeSeries(@RequestParam("time_range") TimeRange timeRange) {
+        return ResponseEntity.ok(statisticService.getTopicViewTimeSeries(timeRange));
     }
-    @GetMapping("/top-topic-view")
-    public ResponseEntity<List<TopicViewSummaryResponse>> getTopNTopicViews(@RequestParam("top") Integer top) {
-        return ResponseEntity.ok(statisticService.getTopNTopics(top));
+    @GetMapping("/views/ranking")
+    public ResponseEntity<List<TopicViewSummaryResponse>> getTopTopicRanking(@RequestParam("top") Integer top) {
+        return ResponseEntity.ok(statisticService.getTopTopicRanking(top));
     }
 }
