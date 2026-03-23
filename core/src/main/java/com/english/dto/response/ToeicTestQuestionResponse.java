@@ -12,12 +12,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ToeicTestQuestionResponse {
     private String id;
-    private String audioUrl;
-    private String imageUrl;
     private String question;
     private Options options;
     private String correctAnswer;
     private String explanation;
-    private Integer part;
     private LocalDateTime createdAt;
 }

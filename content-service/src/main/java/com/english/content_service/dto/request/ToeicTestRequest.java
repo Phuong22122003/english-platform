@@ -11,5 +11,5 @@ import java.util.List;
 @NoArgsConstructor
 public class ToeicTestRequest {
     private String name;
-    private List<ToeicTestQuestionRequest> questions;
+    private List<ToeicTestQuestionGroupRequest> questionGroups;
 }

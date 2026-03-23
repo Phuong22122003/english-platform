@@ -109,16 +109,18 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                 ToeicTestResponse toeic = toeicClient.getTestDetail(examHistory.getTestId());
                 examHistory.setName(toeic.getName());
                 examHistory.setDuration(200);
-                for(var q: toeic.getQuestions()){
-                    questionMap.put(q.getId(),QuestionResponse.builder()
-                            .options(q.getOptions())
-                            .correctAnswer(q.getCorrectAnswer())
-                            .question(q.getQuestion())
-                            .audioUrl(q.getAudioUrl())
-                            .imageUrl(q.getImageUrl())
-                            .explanation(q.getExplanation())
-                            .part(q.getPart())
-                            .build());
+                for(var g: toeic.getQuestionGroups()){
+                    for(var q: g.getQuestions()){
+                        questionMap.put(q.getId(),QuestionResponse.builder()
+                                .options(q.getOptions())
+                                .correctAnswer(q.getCorrectAnswer())
+                                .question(q.getQuestion())
+                                .audioUrl(g.getAudioUrl())
+                                .imageUrl(g.getImageUrl())
+                                .explanation(q.getExplanation())
+                                .part(g.getPart())
+                                .build());
+                    }
                 }
             }
         }

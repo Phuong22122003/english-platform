@@ -16,5 +16,5 @@ public class ToeicTestResponse {
     private String name;
     private Integer totalCompletion;
     private LocalDateTime createdAt;
-    private List<ToeicTestQuestionResponse> questions;
+    private List<ToeicTestQuestionGroupResponse> questionGroups;
 }

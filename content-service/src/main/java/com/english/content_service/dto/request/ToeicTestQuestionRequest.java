@@ -12,8 +12,5 @@ public class ToeicTestQuestionRequest {
     private Options options;
     private String correctAnswer;
     private String explanation;
-    private Integer part;
     private RequestType action;
-    private String imageName;
-    private String audioName;
 }
