@@ -20,7 +20,7 @@ public class VocabularyTestQuestionRequest {
 
     private Integer questionOrder;
 
-    private String explaination;
+    private String explanation;
 
     private String imageName;
 

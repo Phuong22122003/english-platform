@@ -302,7 +302,7 @@ class AgentService:
         test_payload['duration'] = test['duration']
         test_payload['questions'] = []
         for q in test['questions']:
-            q['explaination'] = q['explanation']
+            q['explanation'] = q['explanation']
             test_payload["questions"].append(q)
         headers = {
             "Authorization": f"Bearer {settings.JWT}",
@@ -351,7 +351,7 @@ class AgentService:
                 image_name = image_name.split('.')[-2]
             await self.get_image(name = image_name, description = q['question'], path=self.IMAGE_ROOT)
             
-            q['explaination'] = q['explanation']
+            q['explanation'] = q['explanation']
             
             test_payload["questions"].append(q)
             
@@ -404,7 +404,7 @@ class AgentService:
         for q in test['questions']:
             await self.get_image(name = q['word'], description= q['word'],path=self.IMAGE_ROOT)
             q['imageName'] = f"{q['word']}.jpg"
-            q['explaination'] = q['explanation']
+            q['explanation'] = q['explanation']
             test_payload["questions"].append(q)
         payload = []
         payload.append(

@@ -40,5 +40,5 @@ public class VocabularyTestQuestion {
     @Column(name = "public_id")
     private String publicId;
 
-    private String explaination;
+    private String explanation;
 }

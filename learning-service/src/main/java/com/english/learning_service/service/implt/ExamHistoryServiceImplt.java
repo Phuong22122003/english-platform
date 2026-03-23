@@ -70,7 +70,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                             .correctAnswer(q.getCorrectAnswer())
                             .question(q.getQuestion())
                             .imageUrl(q.getImageUrl())
-                            .explanation(q.getExplaination())
+                            .explanation(q.getExplanation())
                             .build());
                 }
                 break;
@@ -84,7 +84,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                             .options(q.getOptions())
                             .correctAnswer(q.getCorrectAnswer())
                             .question(q.getQuestion())
-                            .explanation(q.getExplaination())
+                            .explanation(q.getExplanation())
                             .build());
                 }
                 break;
@@ -100,7 +100,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                             .question(q.getQuestion())
                             .audioUrl(q.getAudioUrl())
                             .imageUrl(q.getImageUrl())
-                            .explanation(q.getExplaination())
+                            .explanation(q.getExplanation())
                             .build());
                 }
                 break;

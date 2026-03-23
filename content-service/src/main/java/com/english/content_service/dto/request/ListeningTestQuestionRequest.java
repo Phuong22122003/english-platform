@@ -14,7 +14,7 @@ public class ListeningTestQuestionRequest {
     private String question;
     private Options options;
     private String correctAnswer;
-    private String explaination;
+    private String explanation;
     private String imageName;
     private String audioName;
     private RequestType action;

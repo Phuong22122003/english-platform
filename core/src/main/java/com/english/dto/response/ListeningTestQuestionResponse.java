@@ -17,6 +17,6 @@ public class ListeningTestQuestionResponse {
     private String question;
     private Options options;
     private String correctAnswer;
-    private String explaination;
+    private String explanation;
     private Integer questionOrder;
 }

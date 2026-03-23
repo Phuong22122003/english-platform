@@ -19,5 +19,5 @@ public class GrammarTestQuestionResponse {
     private Options options;       // JSONB -> String
     private String correctAnswer;
     private Integer questionOrder;
-    private String explaination;
+    private String explanation;
 }

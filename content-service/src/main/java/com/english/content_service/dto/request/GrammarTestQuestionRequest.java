@@ -20,7 +20,7 @@ public class GrammarTestQuestionRequest {
 
     private Integer questionOrder;
 
-    private String explaination;
+    private String explanation;
 
     private RequestType action;
 }

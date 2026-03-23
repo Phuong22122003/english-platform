@@ -106,5 +106,5 @@ CREATE TABLE listening_test_question(
     question TEXT NOT NULL,
     options JSONB NOT NULL,
     correct_answer VARCHAR(100) NOT NULL,
-    explaination TEXT
+    explanation TEXT
 );

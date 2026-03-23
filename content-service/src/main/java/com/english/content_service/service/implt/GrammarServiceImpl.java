@@ -340,7 +340,7 @@ public class GrammarServiceImpl implements GrammarService {
                 q.setOptions(options);
 
                 q.setCorrectAnswer(getCellValueAsString(row.getCell(5)));
-                q.setExplaination(getCellValueAsString(row.getCell(6)));
+                q.setExplanation(getCellValueAsString(row.getCell(6)));
                 q.setAction(RequestType.ADD); // mặc định là ADD
 
                 questionRequests.add(q);

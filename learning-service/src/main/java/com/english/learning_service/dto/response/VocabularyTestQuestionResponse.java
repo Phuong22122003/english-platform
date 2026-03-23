@@ -21,6 +21,6 @@ public class VocabularyTestQuestionResponse {
     private String correctAnswer;
     private Integer questionOrder;
     private String imageUrl;
-    private String explaination;
+    private String explanation;
     private Options options;
 }

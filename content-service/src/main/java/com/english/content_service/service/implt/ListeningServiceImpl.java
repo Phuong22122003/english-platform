@@ -567,7 +567,7 @@ public class ListeningServiceImpl implements ListeningService {
                 q.setOptions(options);
 
                 q.setCorrectAnswer(getCellValueAsString(row.getCell(5)));
-                q.setExplaination(getCellValueAsString(row.getCell(6)));
+                q.setExplanation(getCellValueAsString(row.getCell(6)));
                 q.setImageName(getCellValueAsString(row.getCell(7)));
                 q.setAudioName(getCellValueAsString(row.getCell(8)));
 

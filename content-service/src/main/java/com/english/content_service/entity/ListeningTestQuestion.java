@@ -36,7 +36,7 @@ public class ListeningTestQuestion {
     @Column(name = "correct_answer")
     private String correctAnswer;
 
-    private String explaination;
+    private String explanation;
 
     @Column(name = "public_audio_id")
     private String publicAudioId;

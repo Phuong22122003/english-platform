@@ -583,7 +583,7 @@ public class VocabularyServiceImpl implements VocabularyService {
      * Excel format:
      * | name | test1 |
      * | duration | 10 |
-     * | question | optionA | optionB | optionC | optionD | correctAnswer | explaination | imageName |
+     * | question | optionA | optionB | optionC | optionD | correctAnswer | explanation | imageName |
      */
     public VocabularyTestResponse addTest(String topicId, MultipartFile excelFile, List<MultipartFile> imageFiles) {
 
@@ -610,7 +610,7 @@ public class VocabularyServiceImpl implements VocabularyService {
                 options.setD(getCellValueAsString(row.getCell(4)));
                 q.setOptions(options);
                 q.setCorrectAnswer(getCellValueAsString(row.getCell(5)));
-                q.setExplaination(getCellValueAsString(row.getCell(6)));
+                q.setExplanation(getCellValueAsString(row.getCell(6)));
                 q.setImageName(getCellValueAsString(row.getCell(7)));
 
                 questionRequests.add(q);
