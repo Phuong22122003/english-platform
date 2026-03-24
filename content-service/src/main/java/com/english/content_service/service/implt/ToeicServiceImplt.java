@@ -350,7 +350,8 @@ public class ToeicServiceImplt implements ToeicService {
             ToeicTestQuestionGroupRequest qgr = request.getQuestionGroups().get(i);
 
             qg.setTest(test);
-
+            if(qg.getQuestions()!=null)
+                qg.getQuestions().forEach(q-> q.setQuestionGroup(qg));
             // Image
             if (qgr.getImageName() != null && !qgr.getImageName().isEmpty()) {
                 FileResponse img = fileResponseMap.get(qgr.getImageName());
