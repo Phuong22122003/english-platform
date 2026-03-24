@@ -13,7 +13,7 @@ CREATE TABLE toeic_test (
     name VARCHAR(200) NOT NULL,
     total_completion INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
+    part_audios JSONB,
     CONSTRAINT fk_toeic_test__toeic_test_group__group_id
         FOREIGN KEY (group_id)
         REFERENCES toeic_test_group(id)
@@ -25,10 +25,10 @@ CREATE TABLE toeic_test_question_group (
     id VARCHAR(36) PRIMARY KEY,
     test_id VARCHAR(36) NOT NULL,
     passage_text TEXT,
-    image_url TEXT,
+    image_urls JSONB,
     audio_url TEXT,
     public_audio_id TEXT,
-    public_image_id TEXT,
+    public_image_ids JSONB,
     part INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

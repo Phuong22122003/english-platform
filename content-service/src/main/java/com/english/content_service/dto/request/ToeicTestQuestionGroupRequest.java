@@ -11,7 +11,6 @@ import java.util.List;
 @Data
 public class ToeicTestQuestionGroupRequest {
     private String id;
-    private ToeicTest test;
     private String passageText;
     private String imageName;
     private String audioName;

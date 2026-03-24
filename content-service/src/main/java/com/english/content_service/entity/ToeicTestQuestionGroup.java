@@ -1,12 +1,14 @@
 package com.english.content_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "toeic_test_question_group")
@@ -29,8 +31,10 @@ public class ToeicTestQuestionGroup {
     @Column(name = "passage_text", columnDefinition = "TEXT")
     private String passageText;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl;
+    @Column(name = "image_urls", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    private List<String> imageUrls;
 
     @Column(name = "audio_url", columnDefinition = "TEXT")
     private String audioUrl;
@@ -38,8 +42,10 @@ public class ToeicTestQuestionGroup {
     @Column(name = "public_audio_id", columnDefinition = "TEXT")
     private String publicAudioId;
 
-    @Column(name = "public_image_id", columnDefinition = "TEXT")
-    private String publicImageId;
+    @Column(name = "public_image_ids", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    private List<String> publicImageIds;
 
     @Column(nullable = false)
     private Integer part;

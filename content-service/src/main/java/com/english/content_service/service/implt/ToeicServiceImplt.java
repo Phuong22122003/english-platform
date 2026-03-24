@@ -358,8 +358,9 @@ public class ToeicServiceImplt implements ToeicService {
                 log.info("   🖼 ImageName={} -> {}", qgr.getImageName(), img != null ? "FOUND" : "NOT FOUND");
 
                 if (img != null) {
-                    qg.setImageUrl(img.getUrl());
-                    qg.setPublicImageId(img.getPublicId());
+                    // need to fix
+//                    qg.setImageUrl(img.getUrl());
+//                    qg.setPublicImageId(img.getPublicId());
                 }
             }
 
@@ -411,8 +412,9 @@ public class ToeicServiceImplt implements ToeicService {
         try {
             // delete files
             for (var qg : questionGroups) {
-                if (qg.getAudioUrl() != null) fileService.deleteFile(qg.getPublicImageId());
-                if (qg.getImageUrl() != null) fileService.deleteFile(qg.getPublicAudioId());
+                if (qg.getAudioUrl() != null) fileService.deleteFile(qg.getPublicAudioId());
+//                need to fix
+//                if (qg.getImageUrl() != null) fileService.deleteFile(qg.getPublicImageId());
             }
         }catch (Exception ex){
             log.error(ex.getMessage());
@@ -482,9 +484,9 @@ public class ToeicServiceImplt implements ToeicService {
                     if (qgReq.getImageName() != null && !qgReq.getImageName().isEmpty()) {
                         FileResponse fr = fileResponseMap.get(qgReq.getImageName());
                         if (fr != null) {
-                            if (group.getPublicImageId() != null) pidsToDelete.add(group.getPublicImageId());
-                            group.setImageUrl(fr.getUrl());
-                            group.setPublicImageId(fr.getPublicId());
+//                            if (group.getPublicImageId() != null) pidsToDelete.add(group.getPublicImageId());
+//                            group.setImageUrl(fr.getUrl());
+//                            group.setPublicImageId(fr.getPublicId());
                         }
                     }
 
@@ -514,8 +516,8 @@ public class ToeicServiceImplt implements ToeicService {
 
                     if (qgReq.getImageName() != null && fileResponseMap.containsKey(qgReq.getImageName())) {
                         FileResponse fr = fileResponseMap.get(qgReq.getImageName());
-                        group.setImageUrl(fr.getUrl());
-                        group.setPublicImageId(fr.getPublicId());
+//                        group.setImageUrl(fr.getUrl());
+//                        group.setPublicImageId(fr.getPublicId());
                     }
 
                     if (qgReq.getAudioName() != null && fileResponseMap.containsKey(qgReq.getAudioName())) {
@@ -540,7 +542,7 @@ public class ToeicServiceImplt implements ToeicService {
 
             for (ToeicTestQuestionGroup existing : existingGroups) {
                 if (!requestGroupIds.contains(existing.getId())) {
-                    if (existing.getPublicImageId() != null) pidsToDelete.add(existing.getPublicImageId());
+//                    if (existing.getPublicImageId() != null) pidsToDelete.add(existing.getPublicImageId());
                     if (existing.getPublicAudioId() != null) pidsToDelete.add(existing.getPublicAudioId());
                     toeicTestQuestionGroupRepository.delete(existing);
                 }

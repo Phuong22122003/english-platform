@@ -115,8 +115,8 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                                 .options(q.getOptions())
                                 .correctAnswer(q.getCorrectAnswer())
                                 .question(q.getQuestion())
-                                .audioUrl(g.getAudioUrl())
-                                .imageUrl(g.getImageUrl())
+//                                .audioUrl(g.getAudioUrl()) // need to fix
+//                                .imageUrl(g.getImageUrl())
                                 .explanation(q.getExplanation())
                                 .part(g.getPart())
                                 .build());
