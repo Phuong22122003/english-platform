@@ -1,6 +1,7 @@
 package com.english.learning_service.dto.response;
 
 
+import com.english.dto.response.Options;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,9 +14,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserAnswerResponse {
-    private String id;
-    private String questionId;
-    private String selectedAnswer;
-    private boolean isCorrect;
-    private Integer part;
+    private String question;
+    private Options options;
+    private String correctAnswer;
+    private String userAnswer;
+    private String explanation;
+    private Integer order;
 }

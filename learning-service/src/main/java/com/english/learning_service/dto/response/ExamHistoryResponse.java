@@ -24,5 +24,5 @@ public class ExamHistoryResponse {
     private Integer duration;
     private LocalDateTime takenAt;
     private LocalDateTime submittedAt;
-    private List<QuestionResponse> questions;
+    private List<UserAnswerGroupResponse> answerGroups;
 }

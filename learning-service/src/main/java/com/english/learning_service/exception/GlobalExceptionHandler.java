@@ -18,6 +18,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<?>> handlerBadRequest(BadRequestException ex){
+        log.error(ex.getMessage());
         return ResponseEntity.badRequest().body(
                 ApiResponse.builder()
                         .code(HttpStatus.BAD_REQUEST.value())
@@ -30,12 +31,14 @@ public class GlobalExceptionHandler {
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         apiResponse.setMessage(runtimeException.getMessage());
+        log.error(runtimeException.getMessage());
         return  ResponseEntity.badRequest().body(apiResponse);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handlerNotFoundException(NotFoundException ex){
+        log.error(ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 ApiResponse.builder()
                         .code(HttpStatus.NOT_FOUND.value())
@@ -45,6 +48,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<?> handelForAppException(AppException ex){
+        log.error(ex.getMessage());
         return ResponseEntity.badRequest().body(
                 ApiResponse.builder()
                         .code(ex.getCode())

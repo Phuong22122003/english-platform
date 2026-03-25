@@ -1,36 +1,47 @@
--- postgresql database initialization
-
--- vocabulary, grammar, listening
 CREATE TYPE item_type_enum AS ENUM ('VOCABULARY', 'GRAMMAR', 'LISTENING', 'FULL_TEST');
 
-CREATE TABLE exam_history(
+CREATE TABLE exam_history (
     id VARCHAR(36) PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
     test_type item_type_enum NOT NULL,
     test_id VARCHAR(36) NOT NULL,
+    name TEXT,
     score INT NOT NULL,
+    duration INT,
     taken_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     submitted_at TIMESTAMP
 );
 
-CREATE TABLE user_answer(
+CREATE TABLE user_answer_group (
     id VARCHAR(36) PRIMARY KEY,
     exam_history_id VARCHAR(36) REFERENCES exam_history(id) ON DELETE CASCADE,
-    question_id VARCHAR(36) NOT NULL,
-    selected_answer VARCHAR(10) NOT NULL,
-    is_correct BOOLEAN NOT NULL
+    passage_text TEXT,
+    image_urls JSONB,
+    audio_url TEXT,
+    part INT,
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-CREATE TABLE favorite(
+CREATE TABLE user_answer (
     id VARCHAR(36) PRIMARY KEY,
-    user_id VARCHAR(36) ,
+    user_answer_group_id VARCHAR(36) REFERENCES user_answer_group(id) ON DELETE CASCADE,
+    question TEXT,
+    options JSONB,
+    correct_answer VARCHAR(100),
+    explanation TEXT,
+    selected_answer VARCHAR(10) NOT NULL,
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE favorite (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36),
     item_type item_type_enum NOT NULL,
     item_id VARCHAR(36) NOT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE plan(
+CREATE TABLE plan (
     id VARCHAR(36) PRIMARY KEY,
     user_id VARCHAR(36),
     title VARCHAR(100) NOT NULL,
@@ -41,19 +52,20 @@ CREATE TABLE plan(
     target INT
 );
 
-CREATE TABLE plan_group(
+CREATE TABLE plan_group (
     id VARCHAR(36) PRIMARY KEY,
     plan_id VARCHAR(36) REFERENCES plan(id) ON DELETE CASCADE,
     name VARCHAR(200),
-    description TEXT
+    description TEXT,
+    start_date TIMESTAMP,
+    end_date TIMESTAMP
 );
 
-CREATE TABLE plan_detail(
+CREATE TABLE plan_detail (
     id VARCHAR(36) PRIMARY KEY,
-    plan_group_id VARCHAR(36) REFERENCES plan_group(id),
+    plan_group_id VARCHAR(36) REFERENCES plan_group(id) ON DELETE CASCADE,
     topic_type item_type_enum NOT NULL,
     topic_id VARCHAR(36),
     start_date TIMESTAMP,
     end_date TIMESTAMP
---    is_completed // get from user topic where store leaning time on topics
 );

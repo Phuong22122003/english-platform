@@ -6,6 +6,8 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,11 +21,8 @@ public class UserAnswer {
     private String id;
 
     @ManyToOne
-    @JoinColumn(name = "exam_history_id")
-    private ExamHistory examHistory;
-
-    @Column(name = "question_id", nullable = false)
-    private String questionId;
+    @JoinColumn(name = "user_answer_group_id")
+    private UserAnswerGroup answerGroup;
 
     @Column(name = "question")
     private String question;
@@ -35,19 +34,12 @@ public class UserAnswer {
     @Column(name = "correct_answer")
     private String correctAnswer;
 
+    @Column(name = "explanation")
     private String explanation;
-
-    @Column(name = "audio_url")
-    private String audioUrl;
-
-    @Column(name = "image_url")
-    private String imageUrl;
 
     @Column(name = "selected_answer", nullable = false, length = 10)
     private String selectedAnswer;
 
-    @Column(name = "is_correct", nullable = false)
-    private boolean isCorrect;
-
-    private Integer part;
+    @Column(name = "created_date")
+    private LocalDateTime createdDate;
 }
