@@ -1,5 +1,6 @@
 package com.english.content_service.entity;
 
+import com.english.utilities.Slug;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,7 +20,6 @@ import java.util.List;
 public class ToeicTest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private String name;
@@ -34,14 +34,17 @@ public class ToeicTest {
     @JoinColumn(name = "group_id")
     private ToeicTestGroup group;
 
-    @Column(name = "part_audios", columnDefinition = "jsonb")
-    @JdbcTypeCode(SqlTypes.JSON)
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<String> partAudios;
+//    @Column(name = "part_audios", columnDefinition = "jsonb")
+//    @JdbcTypeCode(SqlTypes.JSON)
+//    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+//    private List<String> partAudios;
+
 
     @PrePersist
-    public void prePersist() {
-        if (createdAt == null) createdAt = LocalDateTime.now();
-        if (totalCompletion == null) totalCompletion = 0;
+    public void ensureId() {
+        if (this.id == null || this.id.isEmpty()) {
+            String randomNum = String.valueOf((int) (Math.random() * 1001));
+            this.id = Slug.generate(this.name) + randomNum;
+        }
     }
 }

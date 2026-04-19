@@ -23,7 +23,6 @@ public class ToeicTestQuestion {
     @Column(length = 36)
     private String id;
 
-    // Liên kết với bảng Group mới theo đúng Database
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "question_group_id",
@@ -42,10 +41,13 @@ public class ToeicTestQuestion {
     @Column(name = "correct_answer", length = 100, nullable = false)
     private String correctAnswer;
 
+    @Column(name = "question_order")
+    private Integer questionOrder;
+
     @Column(columnDefinition = "TEXT")
     private String explanation;
 
-    @CreationTimestamp // Thay cho PrePersist để tự động hóa hoàn toàn
+    @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

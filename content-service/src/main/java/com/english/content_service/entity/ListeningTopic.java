@@ -1,6 +1,7 @@
 package com.english.content_service.entity;
 
 import com.english.enums.Level;
+import com.english.utilities.Slug;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -17,7 +18,6 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "listening_topic")
 public class ListeningTopic {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private String name;
@@ -36,4 +36,12 @@ public class ListeningTopic {
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private Level level;
+
+    @PrePersist
+    public void ensureId() {
+        if (this.id == null || this.id.isEmpty()) {
+            String randomNum = String.valueOf((int) (Math.random() * 1001));
+            this.id = Slug.generate(this.name) + randomNum;
+        }
+    }
 }

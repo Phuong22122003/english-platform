@@ -1,5 +1,6 @@
 package com.english.content_service.entity;
 
+import com.english.utilities.Slug;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -14,7 +15,6 @@ import java.time.LocalDateTime;
 public class ToeicTestGroup {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Column(nullable = false)
@@ -27,8 +27,10 @@ public class ToeicTestGroup {
     private LocalDateTime createdAt;
 
     @PrePersist
-    public void prePersist() {
-        if (createdAt == null) createdAt = LocalDateTime.now();
-        if (releaseDate == null) releaseDate = LocalDateTime.now();
+    public void ensureId() {
+        if (this.id == null || this.id.isEmpty()) {
+            String randomNum = String.valueOf((int) (Math.random() * 1001));
+            this.id = Slug.generate(this.name) + randomNum;
+        }
     }
 }
