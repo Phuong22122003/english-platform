@@ -4,14 +4,15 @@ import eng_to_ipa as ipa
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 import torch
 import torchaudio
+import torch.quantization
 import numpy as np
 import json
 from app.schemas import *
 from app.core import settings
 import os
-
+from Bio import Align
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_DIR, "model", "fineturning")
+MODEL_PATH = os.path.join(BASE_DIR, "model", "finetuning2")
 
 class PronunciationService:
     def __init__(self):
@@ -23,6 +24,11 @@ class PronunciationService:
         model_name = MODEL_PATH
         self.processor = WhisperProcessor.from_pretrained(model_name)
         self.model = WhisperForConditionalGeneration.from_pretrained(model_name)
+
+        # self.model = torch.quantization.quantize_dynamic(
+        #         #     self.model, {torch.nn.Linear}, dtype=torch.qint8
+        #         # )
+
         self.model.config.forced_decoder_ids = None
         self.model.generation_config.forced_decoder_ids = None
         self.model.generation_config.suppress_tokens = None
@@ -67,12 +73,14 @@ class PronunciationService:
             position += 1
         
         return ipa_output
+    
     def clear_text(self, text:str):
         """
         Clear text by removing unwanted characters
         """
         allowed_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ")
         return ''.join(c for c in text if c in allowed_chars)
+    
     def get_ipa_confidence(self, text_input:str, audio_array, sample_rate=16000):
         """
         Main function to get IPA confidence score
@@ -87,6 +95,7 @@ class PronunciationService:
         # ====== 1. Convert text to IPA ======
         correct_ipa = ipa.convert(self.clear_text(text_input))
         correct_ipa_tokens = [{t: i} for i, t in enumerate(correct_ipa)]
+        
         # ====== 2. Load and predict audio with Whisper ======
         speech_array = np.array(audio_array)
         speech_array = torch.from_numpy(speech_array).float()
@@ -125,9 +134,10 @@ class PronunciationService:
         
         print(f"Correct IPA: {correct_ipa_tokens}\n")
         print(f"Predicted tokens: {pred_tokens}\n")
-        # return
-        # ====== 3. Dùng LLM để phân tích alignment ======
-        alignment_result = self.best_alignment_analysis(
+       
+       
+        # ====== Best match alignment ======
+        alignment_result = self.best_alignment_analysts(
             correct_ipa_tokens, 
             pred_tokens
         )
@@ -143,7 +153,7 @@ class PronunciationService:
                 'detail_scores': detail_scores
             }
         
-        # ====== 4. Calculate confidence based on LLM alignment and Whisper scores ======
+        # ====== 4. Calculate confidence based on alignment and Whisper scores ======
         results = []
         scores = outputs.scores  # List of tensors
         for alignment_info in alignment_result['alignment']:
@@ -190,12 +200,12 @@ class PronunciationService:
                 print(f"{correct_char:>5s} → MATCH ({pred_char}) (confidence: {conf:.2f}%)")
                 
             else:  # is_match == "FALSE"
-                # Mismatch - lấy confidence của correct char (sẽ thấp vì model đã predict sai)
+                # Mismatch - get confidence of correct char in this position
                 if pred_idx < len(scores):
                     token_scores = scores[pred_idx][0]
                     probs = torch.nn.functional.softmax(token_scores, dim=-1)
                     
-                    # Encode correct char để lấy token ID
+                    # Encode correct char to get token ID
                     token_ids = self.processor.tokenizer.encode(f'-{self.ipa_to_id[correct_char]}', add_special_tokens=False)
                     
                     if len(token_ids) == 0:
@@ -214,8 +224,8 @@ class PronunciationService:
                 })
                 print(f"{correct_char:>5s} → MISMATCH ({pred_char}) (confidence: {conf:.2f}%)")
         
-        # ====== 5. Tính toán kết quả cuối cùng ======
-        # ipa_li = list(ipa.convert(self.clear_text(text_input)))
+        # ====== 5. Final result ======
+        
         detail_scores = []
         total = 0.0
         count = 0
@@ -237,6 +247,7 @@ class PronunciationService:
             'ipa': correct_ipa,
             'detail_scores': detail_scores
         }
+        
     @staticmethod
     def dtw_alignment(correct_tokens, pred_tokens):
         """
@@ -334,41 +345,64 @@ class PronunciationService:
     #     {{"correct_index": 1, "correct_char": "ɛ",  "pred_index": 1, "pred_char": "ɛ",  "is_match": "TRUE"}},
     #     ...
     # ]
-    def best_alignment_analysis(self, correct_tokens: list, pred_tokens: list):
-        temp_pred_tokens = list(pred_tokens)
-        res = {
-            "alignment": [],
-            "can_align": False
-        }
+
+    def best_alignment_analysts(self, correct_tokens: list, pred_tokens: list):
+        
+        seq1 = "".join([next(iter(d)) for d in correct_tokens])
+        seq2 = "".join([next(iter(d)) for d in pred_tokens])
+
+        aligner = Align.PairwiseAligner()
+        aligner.mode = 'global'
+        aligner.match_score = 2
+        aligner.mismatch_score = -1
+        aligner.open_gap_score = -2
+        aligner.extend_gap_score = -2
+
+        alignments = aligner.align(seq1, seq2)
+        best_alignment = alignments[0]
+
+        formatted_alignment = []
         total_match_token = 0
 
-        for correct_index, token in enumerate(correct_tokens):
-            correct_key = next(iter(token))
+        aligned_seq1, aligned_seq2 = best_alignment
 
-            for current_index, pred_token in enumerate(temp_pred_tokens):
-                pred_key = next(iter(pred_token))
-                pred_index = pred_token[pred_key]
-
-                if correct_key == pred_key:
-                    res["alignment"].append({
-                        "correct_index": correct_index,
-                        "correct_char": correct_key,
-                        "pred_index": pred_index,
-                        "pred_char": pred_key,
-                        "is_match": "TRUE"
-                    })
-                    total_match_token += 1
-                    del temp_pred_tokens[0: current_index + 1]
-                    break
-            else:
-                res["alignment"].append({
-                    "correct_index": correct_index,
-                    "correct_char": correct_key,
+        idx1, idx2 = 0, 0
+        for char1, char2 in zip(aligned_seq1, aligned_seq2):
+            if char1 == char2:
+                formatted_alignment.append({
+                    "correct_index": idx1,
+                    "correct_char": char1,
+                    "pred_index": pred_tokens[idx2][next(iter(pred_tokens[idx2]))],
+                    "pred_char": char2,
+                    "is_match": "TRUE"
+                })
+                total_match_token += 1
+                idx1 += 1
+                idx2 += 1
+            elif char1 == '-':
+                idx2 += 1
+            elif char2 == '-':
+                formatted_alignment.append({
+                    "correct_index": idx1,
+                    "correct_char": char1,
                     "is_match": "NOT EXIST"
                 })
+                idx1 += 1
+            else: 
+                formatted_alignment.append({
+                    "correct_index": idx1,
+                    "correct_char": char1,
+                    "pred_index": pred_tokens[idx2][next(iter(pred_tokens[idx2]))],
+                    "pred_char": char2,
+                    "is_match": "FALSE"
+                })
+                idx1 += 1
+                idx2 += 1
 
-        res['can_align'] = total_match_token > len(correct_tokens) / 2
-        print(res)
+        res = {
+            "alignment": formatted_alignment,
+            "can_align": total_match_token > len(correct_tokens) / 5
+        }
         return res
 
     def llm_alignment_analysis(self, correct_tokens:dict, pred_tokens:dict, client):
