@@ -5,7 +5,7 @@ import com.english.content_service.dto.request.ListeningTestQuestionRequest;
 import com.english.content_service.dto.request.ListeningTestRequest;
 import com.english.content_service.dto.request.ListeningTopicRequest;
 import com.english.content_service.entity.*;
-import com.english.content_service.service.AgentService;
+//import com.english.content_service.service.AgentService;
 import com.english.content_service.service.TopicViewStatisticService;
 import com.english.dto.response.FileResponse;
 import com.english.dto.response.ListeningResponse;
@@ -18,6 +18,7 @@ import com.english.content_service.repository.ListeningTestRepository;
 import com.english.content_service.repository.ListeningTopicRepository;
 import com.english.enums.RequestType;
 import com.english.enums.TopicType;
+import com.english.exception.BadRequestException;
 import com.english.exception.NotFoundException;
 import com.english.service.FileService;
 import jakarta.transaction.Transactional;
@@ -136,7 +137,7 @@ public class ListeningServiceImpl implements ListeningService {
         }
 
         // delete listening
-        List<Listening> listeningList = listeningRepository.findByTopicId(topicId);
+        List<Listening> listeningList = listeningRepository.findByTopicIdOrderByCreatedAt(topicId);
         listeningRepository.deleteAll(listeningList);
 
         listeningTopicRepository.delete(topic);
@@ -158,10 +159,9 @@ public class ListeningServiceImpl implements ListeningService {
     }
 
     @Override
-    @Transactional
     public ListeningTopicResponse getListeningByTopic(String topicId) {
         var topic = listeningTopicRepository.findById(topicId).orElseThrow(()->new RuntimeException("Topic Not found"));
-        List<Listening> listeningList = listeningRepository.findByTopicId(topicId);
+        List<Listening> listeningList = listeningRepository.findByTopicIdOrderByCreatedAt(topicId);
         var listeningListResponses = listeningMapper.toListeningResponse(listeningList);
         var topicReponse = listeningMapper.toTopicResponse(topic);
         topicReponse.setListenings(listeningListResponses);
@@ -498,6 +498,9 @@ public class ListeningServiceImpl implements ListeningService {
                     q.setAudioUrl(audioResponse.getUrl());
                     q.setPublicAudioId(audioResponse.getPublicId());
                     uploadedPublicIds.add(audioResponse.getPublicId());
+                }
+                else {
+                    throw new BadRequestException("Audio is required");
                 }
             }
 

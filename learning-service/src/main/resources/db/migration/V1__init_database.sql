@@ -5,32 +5,32 @@ CREATE TABLE exam_history (
     user_id VARCHAR(36) NOT NULL,
     test_type item_type_enum NOT NULL,
     test_id VARCHAR(36) NOT NULL,
-    name TEXT,
+    name TEXT NOT NULL,
     score INT NOT NULL,
-    duration INT,
-    taken_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    submitted_at TIMESTAMP
+    duration INT NOT NULL,
+    taken_at TIMESTAMP NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+    submitted_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE user_answer_group (
     id VARCHAR(36) PRIMARY KEY,
-    exam_history_id VARCHAR(36) REFERENCES exam_history(id) ON DELETE CASCADE,
+    exam_history_id VARCHAR(36) NOT NULL REFERENCES exam_history(id) ON DELETE CASCADE,
     passage_text TEXT,
     image_urls JSONB,
     audio_url TEXT,
     part INT,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_answer (
     id VARCHAR(36) PRIMARY KEY,
-    user_answer_group_id VARCHAR(36) REFERENCES user_answer_group(id) ON DELETE CASCADE,
-    question TEXT,
-    options JSONB,
-    correct_answer VARCHAR(100),
+    user_answer_group_id VARCHAR(36) NOT NULL  REFERENCES user_answer_group(id) ON DELETE CASCADE,
+    question TEXT NOT NULL,
+    options JSONB NOT NULL,
+    correct_answer VARCHAR(100) NOT NULL,
     explanation TEXT,
-    selected_answer VARCHAR(10) NOT NULL,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    selected_answer VARCHAR(10),
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE favorite (

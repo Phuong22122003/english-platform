@@ -19,3 +19,4 @@ fastmcp
 pytz
 openpyxl
 icrawler
+biopython==1.87

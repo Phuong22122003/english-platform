@@ -11,6 +11,5 @@ import java.util.List;
 
 @Repository
 public interface ListeningRepository extends JpaRepository<Listening, String> {
-    // Add custom query methods here if needed
-    List<Listening> findByTopicId(String topicId);
+    List<Listening> findByTopicIdOrderByCreatedAt(String topicId);
 }

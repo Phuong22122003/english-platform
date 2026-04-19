@@ -5,3 +5,4 @@
 - activate: .venv\Scripts\activate
 - deactivate
 - pip install requirements.txt
+- pip freeze > requirements_stable.txt 

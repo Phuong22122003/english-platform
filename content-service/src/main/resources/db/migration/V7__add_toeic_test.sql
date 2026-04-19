@@ -2,18 +2,18 @@
 CREATE TABLE toeic_test_group (
     id VARCHAR(36) PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
-    release_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    release_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 --- 2. Bảng đề thi chi tiết (Test 1, Test 2...)
 CREATE TABLE toeic_test (
     id VARCHAR(36) PRIMARY KEY,
-    group_id VARCHAR(36),
+    group_id VARCHAR(36) NOT NULL,
     name VARCHAR(200) NOT NULL,
-    total_completion INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    part_audios JSONB,
+    total_completion INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     part_audios JSONB NOT NULL,
     CONSTRAINT fk_toeic_test__toeic_test_group__group_id
         FOREIGN KEY (group_id)
         REFERENCES toeic_test_group(id)
@@ -30,7 +30,8 @@ CREATE TABLE toeic_test_question_group (
     public_audio_id TEXT,
     public_image_ids JSONB,
     part INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    group_order INT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_toeic_test_question_group__toeic_test__test_id
         FOREIGN KEY (test_id)
@@ -46,7 +47,8 @@ CREATE TABLE toeic_test_question (
     options JSONB NOT NULL,
     correct_answer VARCHAR(100) NOT NULL,
     explanation TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    question_order INT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_toeic_test_question__toeic_test_question_group__group_id
         FOREIGN KEY (question_group_id)

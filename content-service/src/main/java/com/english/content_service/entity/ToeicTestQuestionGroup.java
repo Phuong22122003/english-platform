@@ -50,12 +50,16 @@ public class ToeicTestQuestionGroup {
     @Column(nullable = false)
     private Integer part;
 
+    @Column(name = "group_order")
+    private Integer groupOrder;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     // Quan hệ 1-N với bảng Question (đã thống nhất ở Database)
     @OneToMany(mappedBy = "questionGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("questionOrder ASC")
     private List<ToeicTestQuestion> questions;
 
 }

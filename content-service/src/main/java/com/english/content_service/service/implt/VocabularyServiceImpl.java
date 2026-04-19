@@ -11,8 +11,6 @@ import com.english.content_service.dto.request.VocabularyRequest;
 import com.english.content_service.dto.request.VocabularyTestQuestionRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
 import com.english.content_service.entity.Options;
-import com.english.content_service.httpclient.AgentClient;
-import com.english.content_service.service.AgentService;
 import com.english.content_service.service.TopicViewStatisticService;
 import com.english.dto.response.*;
 import com.english.enums.RequestType;
@@ -106,8 +104,8 @@ public class VocabularyServiceImpl implements VocabularyService {
     @Override
     @Transactional
     public VocabTopicResponse getVocabulariesByTopicId(String topicId) {
-        String topicKey = "vocabulary:topics:"+topicId;
-        String vocabulariesKey = "vocabulary:vocabularies:"+topicId;
+        String topicKey = "vocabulary:topics:info:"+topicId;
+        String vocabulariesKey = "vocabulary:topics:items:"+topicId;
 
         VocabularyTopic topic = (VocabularyTopic) redisTemplate.opsForValue().get(topicKey);
         List<Vocabulary> vocabularies = (List<Vocabulary>) redisTemplate.opsForValue().get(vocabulariesKey);
@@ -175,7 +173,7 @@ public class VocabularyServiceImpl implements VocabularyService {
         List<VocabularyTest> testList = tests.getContent();
         List<VocabularyTestResponse> testResponses = vocabularyMapper.toVocabularyTestResponses(testList);
         VocabTopicResponse response = vocabularyMapper.toVocabTopicResponse(topic);
-        response.setTests(testResponses);
+        response.setTests(new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements()));
         return  response;
     }
     @Override
@@ -241,7 +239,7 @@ public class VocabularyServiceImpl implements VocabularyService {
             return new NotFoundException("Topic not found");
         });
         // delete redis cache
-        Set<String> keys = redisTemplate.keys("vocabulary:topic:*");
+        Set<String> keys = redisTemplate.keys("vocabulary:topics:*");
         redisTemplate.delete(keys);
 
         List<String> publicIds = vocabularyTestQuestionRepository.findAllPublicIdsByTopicId(topicId);
@@ -273,7 +271,7 @@ public class VocabularyServiceImpl implements VocabularyService {
                 .orElseThrow(() -> new NotFoundException("Topic not found"));
 
         // Delete old cache value
-        redisTemplate.delete("vocabulary:vocabularies:"+topicId);
+        redisTemplate.delete("vocabulary:topics:items:"+topicId);
 
         List<Vocabulary> vocabularies = vocabularyMapper.toVocabularies(requests);
 
@@ -361,7 +359,7 @@ public class VocabularyServiceImpl implements VocabularyService {
                 .orElseThrow(() -> new NotFoundException("Topic not found"));
 
         // Delete old cache value
-        redisTemplate.delete("vocabulary:vocabularies:"+topicId);
+        redisTemplate.delete("vocabulary:topics:items:"+topicId);
 
         // ✅ 2. Ánh xạ file name -> file (image + audio)
         Map<String, MultipartFile> fileMap = new HashMap<>();
@@ -489,7 +487,7 @@ public class VocabularyServiceImpl implements VocabularyService {
         Vocabulary vocabulary = this.vocabularyRepository.findById(vocabId).orElseThrow(() -> new NotFoundException("Vocab not found"));
 
         // Delete old cache value
-        redisTemplate.delete("vocabulary:vocabularies:"+vocabulary.getTopic().getId());
+        redisTemplate.delete("vocabulary:topics:items:"+vocabulary.getTopic().getId());
 
         this.vocabularyMapper.patchUpdate(vocabulary, request);
         if (imageFile != null && !imageFile.isEmpty()) {

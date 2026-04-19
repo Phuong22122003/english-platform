@@ -14,6 +14,8 @@ import com.english.content_service.service.ToeicService;
 import com.english.dto.response.FileResponse;
 import com.english.dto.response.ToeicTestGroupResponse;
 import com.english.dto.response.ToeicTestResponse;
+import com.english.enums.RequestType;
+import com.english.exception.BadRequestException;
 import com.english.exception.NotFoundException;
 import com.english.service.FileService;
 import jakarta.transaction.Transactional;
@@ -60,7 +62,7 @@ public class ToeicServiceImplt implements ToeicService {
         var responses = toeicMapper.toGroupResponses(groups.getContent());
         List<ToeicTest> tests;
         for(var response: responses){
-            tests = toeicTestRepository.findByGroupId(response.getId());
+            tests = toeicTestRepository.findByGroupIdOrderByCreatedAtAsc(response.getId());
             response.setTests(toeicMapper.toTestResponses(tests));
         }
         return new PageImpl<>(responses, PageRequest.of(page, limit), groups.getTotalElements());
@@ -70,7 +72,7 @@ public class ToeicServiceImplt implements ToeicService {
         ToeicTestGroup groups = toeicTestGroupRepository.findById(id).orElseThrow(() -> new NotFoundException("Can not found this group"));
         var response = toeicMapper.toGroupResponse(groups);
         List<ToeicTest> tests;
-        tests = toeicTestRepository.findByGroupId(response.getId());
+        tests = toeicTestRepository.findByGroupIdOrderByCreatedAtAsc(response.getId());
         response.setTests(toeicMapper.toTestResponses(tests));
         return response;
     }
@@ -127,7 +129,7 @@ public class ToeicServiceImplt implements ToeicService {
     public ToeicTestResponse getTestById(String id) {
         ToeicTest test = toeicTestRepository.findById(id)
                 .orElseThrow(()->new NotFoundException("Test not found"));
-        List<ToeicTestQuestionGroup> questionGroups = toeicTestQuestionGroupRepository.findByTestId(test.getId());
+        List<ToeicTestQuestionGroup> questionGroups = toeicTestQuestionGroupRepository.findByTestIdOrderByGroupOrderAsc(test.getId());
         ToeicTestResponse response = toeicMapper.toTestResponse(test);
         response.setQuestionGroups(toeicMapper.toQuestionGroupResponses(questionGroups));
         return response;
@@ -161,100 +163,100 @@ public class ToeicServiceImplt implements ToeicService {
             MultipartFile excelFile,
             List<MultipartFile> imageFiles,
             List<MultipartFile> audioFiles) {
-
-        int rowAt = 0, columnAt = 0;
-
-        log.info("📝 [ADD TEST EXCEL] groupId={}, fileName={}, size={}",
-                groupId,
-                excelFile != null ? excelFile.getOriginalFilename() : "null",
-                excelFile != null ? excelFile.getSize() : 0);
-
-        try (InputStream is = excelFile.getInputStream();
-             Workbook workbook = new XSSFWorkbook(is)) {
-
-            Sheet sheet = workbook.getSheetAt(0);
-            ToeicTestRequest request = new ToeicTestRequest();
-            request.setName(getCellValueAsString(sheet.getRow(1).getCell(1)));
-            log.info("📌 Test name from Excel (row=2,col=B): '{}'",
-                    request.getName());
-
-            request.setQuestionGroups(new ArrayList<>());
-            ToeicTestQuestionGroupRequest questionGroup = null;
-            int group = 0;
-            for (int i = 2; i < sheet.getPhysicalNumberOfRows(); i++) {
-                Row row = sheet.getRow(i);
-
-                int currentGroup = Integer.valueOf(getCellValueAsString(row.getCell(0)));
-                if(currentGroup!=group){
-                    group = currentGroup;
-                    questionGroup = new ToeicTestQuestionGroupRequest();
-
-                    columnAt = 8;
-                    questionGroup.setImageName(getCellValueAsString(row.getCell(8)));
-
-                    columnAt = 9;
-                    questionGroup.setAudioName(getCellValueAsString(row.getCell(9)));
-
-                    columnAt = 10;
-                    if (i < 9) {
-                        questionGroup.setPart(1);
-                    } else if (i < 35) {
-                        questionGroup.setPart(2);
-                    } else if (i < 75) {
-                        questionGroup.setPart(3);
-                    } else if (i < 106) {
-                        questionGroup.setPart(4);
-                    } else if (i < 137) {
-                        questionGroup.setPart(5);
-                    } else if (i < 154) {
-                        questionGroup.setPart(6);
-                    } else {
-                        questionGroup.setPart(7);
-                    }
-                    questionGroup.setQuestions(new ArrayList<>());
-                    request.getQuestionGroups().add(questionGroup);
-                }
-
-                ToeicTestQuestionRequest question = new ToeicTestQuestionRequest();
-
-                columnAt = 1;
-                question.setQuestion(getCellValueAsString(row.getCell(1)));
-
-                Options options = new Options();
-
-                columnAt = 2;
-                options.setA(getCellValueAsString(row.getCell(2)));
-                columnAt = 3;
-                options.setB(getCellValueAsString(row.getCell(3)));
-                columnAt = 4;
-                options.setC(getCellValueAsString(row.getCell(4)));
-                columnAt = 5;
-                options.setD(getCellValueAsString(row.getCell(5)));
-
-                question.setOptions(options);
-
-                columnAt = 6;
-                question.setCorrectAnswer(getCellValueAsString(row.getCell(6)));
-
-                columnAt = 7;
-                question.setExplanation(getCellValueAsString(row.getCell(7)));
-
-                questionGroup.getQuestions().add(question);
-            }
-
-            return addTest(groupId, request, imageFiles, audioFiles);
-
-        } catch (Exception e) {
-            log.error("❌ Error while parsing Excel at rowAt={}, columnAt={}, excelRow={}, excelCol={} -> {}",
-                    rowAt,
-                    columnAt,
-                    (rowAt + 1),
-                    (columnAt + 1),
-                    e.getMessage(),
-                    e);
-
-            throw new RuntimeException("{row:" + rowAt + ",column:" + columnAt + "}");
-        }
+            return null;
+//        int rowAt = 0, columnAt = 0;
+//
+//        log.info("📝 [ADD TEST EXCEL] groupId={}, fileName={}, size={}",
+//                groupId,
+//                excelFile != null ? excelFile.getOriginalFilename() : "null",
+//                excelFile != null ? excelFile.getSize() : 0);
+//
+//        try (InputStream is = excelFile.getInputStream();
+//             Workbook workbook = new XSSFWorkbook(is)) {
+//
+//            Sheet sheet = workbook.getSheetAt(0);
+//            ToeicTestRequest request = new ToeicTestRequest();
+//            request.setName(getCellValueAsString(sheet.getRow(1).getCell(1)));
+//            log.info("Test name from Excel (row=2,col=B): '{}'",
+//                    request.getName());
+//
+//            request.setQuestionGroups(new ArrayList<>());
+//            ToeicTestQuestionGroupRequest questionGroup = null;
+//            int group = 0;
+//            for (int i = 2; i < sheet.getPhysicalNumberOfRows(); i++) {
+//                Row row = sheet.getRow(i);
+//
+//                int currentGroup = Integer.valueOf(getCellValueAsString(row.getCell(0)));
+//                if(currentGroup!=group){
+//                    group = currentGroup;
+//                    questionGroup = new ToeicTestQuestionGroupRequest();
+//
+//                    columnAt = 8;
+//                    questionGroup.setImageName(getCellValueAsString(row.getCell(8)));
+//
+//                    columnAt = 9;
+//                    questionGroup.setAudioName(getCellValueAsString(row.getCell(9)));
+//
+//                    columnAt = 10;
+//                    if (i < 9) {
+//                        questionGroup.setPart(1);
+//                    } else if (i < 35) {
+//                        questionGroup.setPart(2);
+//                    } else if (i < 75) {
+//                        questionGroup.setPart(3);
+//                    } else if (i < 106) {
+//                        questionGroup.setPart(4);
+//                    } else if (i < 137) {
+//                        questionGroup.setPart(5);
+//                    } else if (i < 154) {
+//                        questionGroup.setPart(6);
+//                    } else {
+//                        questionGroup.setPart(7);
+//                    }
+//                    questionGroup.setQuestions(new ArrayList<>());
+//                    request.getQuestionGroups().add(questionGroup);
+//                }
+//
+//                ToeicTestQuestionRequest question = new ToeicTestQuestionRequest();
+//
+//                columnAt = 1;
+//                question.setQuestion(getCellValueAsString(row.getCell(1)));
+//
+//                Options options = new Options();
+//
+//                columnAt = 2;
+//                options.setA(getCellValueAsString(row.getCell(2)));
+//                columnAt = 3;
+//                options.setB(getCellValueAsString(row.getCell(3)));
+//                columnAt = 4;
+//                options.setC(getCellValueAsString(row.getCell(4)));
+//                columnAt = 5;
+//                options.setD(getCellValueAsString(row.getCell(5)));
+//
+//                question.setOptions(options);
+//
+//                columnAt = 6;
+//                question.setCorrectAnswer(getCellValueAsString(row.getCell(6)));
+//
+//                columnAt = 7;
+//                question.setExplanation(getCellValueAsString(row.getCell(7)));
+//
+//                questionGroup.getQuestions().add(question);
+//            }
+//
+//            return addTest(groupId, request, imageFiles, audioFiles);
+//
+//        } catch (Exception e) {
+//            log.error("❌ Error while parsing Excel at rowAt={}, columnAt={}, excelRow={}, excelCol={} -> {}",
+//                    rowAt,
+//                    columnAt,
+//                    (rowAt + 1),
+//                    (columnAt + 1),
+//                    e.getMessage(),
+//                    e);
+//
+//            throw new RuntimeException("{row:" + rowAt + ",column:" + columnAt + "}");
+//        }
     }
 
     private String getCellValueAsString(Cell cell) {
@@ -275,12 +277,12 @@ public class ToeicServiceImplt implements ToeicService {
             List<MultipartFile> imageFiles,
             List<MultipartFile> audioFiles) {
 
-        log.info("➕ [ADD TEST] groupId={}, testName={}", groupId, request.getName());
-        log.info("📌 Total questions group from request: {}", request.getQuestionGroups() != null ? request.getQuestionGroups().size() : 0);
+        log.info("[ADD TEST] groupId={}, testName={}", groupId, request.getName());
+        log.info("Total questions group from request: {}", request.getQuestionGroups() != null ? request.getQuestionGroups().size() : 0);
 
         ToeicTestGroup group = toeicTestGroupRepository.findById(groupId)
                 .orElseThrow(() -> {
-                    log.error("❌ Group not found: {}", groupId);
+                    log.error("Group not found: {}", groupId);
                     return new NotFoundException("Group not found");
                 });
 
@@ -292,7 +294,7 @@ public class ToeicServiceImplt implements ToeicService {
                 .build();
 
         test = toeicTestRepository.save(test);
-        log.info("📝 Test created: id={}, name={}", test.getId(), test.getName());
+        log.info("Test created: id={}, name={}", test.getId(), test.getName());
 
         List<ToeicTestQuestionGroup> questionGroups = toeicMapper.toQuestionGroups(request.getQuestionGroups());
 
@@ -305,11 +307,11 @@ public class ToeicServiceImplt implements ToeicService {
         // ------------------------
         try {
             if (imageFiles != null) {
-                log.info("📸 Uploading {} image files...", imageFiles.size());
+                log.info("Uploading {} image files...", imageFiles.size());
                 for (MultipartFile img : imageFiles) {
-                    log.info("➡️ Upload image: {}", img.getOriginalFilename());
+                    log.info("➡Upload image: {}", img.getOriginalFilename());
                     FileResponse fileResponse = fileService.uploadImage(img);
-                    log.info("   ✔ Uploaded image: name={}, url={}", img.getOriginalFilename(), fileResponse.getUrl());
+                    log.info("Uploaded image: name={}, url={}", img.getOriginalFilename(), fileResponse.getUrl());
 
                     fileResponseMap.put(img.getOriginalFilename(), fileResponse);
                     uploadedPublicIds.add(fileResponse.getPublicId());
@@ -317,18 +319,18 @@ public class ToeicServiceImplt implements ToeicService {
             }
 
             if (audioFiles != null) {
-                log.info("🔊 Uploading {} audio files...", audioFiles.size());
+                log.info("Uploading {} audio files...", audioFiles.size());
                 for (MultipartFile audio : audioFiles) {
-                    log.info("➡️ Upload audio: {}", audio.getOriginalFilename());
+                    log.info("Upload audio: {}", audio.getOriginalFilename());
                     FileResponse fileResponse = fileService.uploadAudio(audio);
-                    log.info("   ✔ Uploaded audio: name={}, url={}", audio.getOriginalFilename(), fileResponse.getUrl());
+                    log.info("Uploaded audio: name={}, url={}", audio.getOriginalFilename(), fileResponse.getUrl());
 
                     fileResponseMap.put(audio.getOriginalFilename(), fileResponse);
                     uploadedPublicIds.add(fileResponse.getPublicId());
                 }
             }
         } catch (Exception e) {
-            log.error("❌ Error while uploading files: {}", e.getMessage());
+            log.error("Error while uploading files: {}", e.getMessage());
             log.warn("🗑 Rolling back uploaded files...");
             uploadedPublicIds.forEach(pid -> {
                 try {
@@ -353,26 +355,26 @@ public class ToeicServiceImplt implements ToeicService {
             if(qg.getQuestions()!=null)
                 qg.getQuestions().forEach(q-> q.setQuestionGroup(qg));
             // Image
-            if (qgr.getImageName() != null && !qgr.getImageName().isEmpty()) {
-                FileResponse img = fileResponseMap.get(qgr.getImageName());
-                log.info("   🖼 ImageName={} -> {}", qgr.getImageName(), img != null ? "FOUND" : "NOT FOUND");
+            if (qgr.getImageNames() != null && !qgr.getImageNames().isEmpty()) {
+                qg.setImageUrls(new ArrayList<>());
+                for(String imgName: qgr.getImageNames()){
+                    FileResponse img = fileResponseMap.get(imgName);
+                    if(img == null) throw new BadRequestException("Image name is not correct");
+                    log.info("ImageName={} -> {}", imgName, img != null ? "FOUND" : "NOT FOUND");
+                    qg.getImageUrls().add(img.getUrl());
+                    qg.getPublicImageIds().add(img.getPublicId());
 
-                if (img != null) {
-                    // need to fix
-//                    qg.setImageUrl(img.getUrl());
-//                    qg.setPublicImageId(img.getPublicId());
                 }
             }
 
             // Audio
             if (qgr.getAudioName() != null && !qgr.getAudioName().isEmpty()) {
                 FileResponse audio = fileResponseMap.get(qgr.getAudioName());
-                log.info("   🔊 AudioName={} -> {}", qgr.getAudioName(), audio != null ? "FOUND" : "NOT FOUND");
+                if(audio == null) throw new BadRequestException("Audio name is not correct");
+                log.info("AudioName={} -> {}", qgr.getAudioName(), audio != null ? "FOUND" : "NOT FOUND");
+                qg.setAudioUrl(audio.getUrl());
+                qg.setPublicAudioId(audio.getPublicId());
 
-                if (audio != null) {
-                    qg.setAudioUrl(audio.getUrl());
-                    qg.setPublicAudioId(audio.getPublicId());
-                }
             }
         }
 
@@ -383,7 +385,7 @@ public class ToeicServiceImplt implements ToeicService {
             toeicTestQuestionGroupRepository.saveAll(questionGroups);
             log.info("💾 Saved {} question groups to DB successfully!", questionGroups.size());
         } catch (Exception e) {
-            log.error("❌ Error saving questions: {}", e.getMessage());
+            log.error("Error saving questions: {}", e.getMessage());
             log.warn("🗑 Rolling back uploaded files...");
 
             uploadedPublicIds.forEach(pid -> {
@@ -408,13 +410,13 @@ public class ToeicServiceImplt implements ToeicService {
     @Override
     @Transactional
     public void deleteTest(String id) {
-        List<ToeicTestQuestionGroup> questionGroups = toeicTestQuestionGroupRepository.findByTestId(id);
+        List<ToeicTestQuestionGroup> questionGroups = toeicTestQuestionGroupRepository.findByTestIdOrderByGroupOrderAsc(id);
         try {
             // delete files
             for (var qg : questionGroups) {
-                if (qg.getAudioUrl() != null) fileService.deleteFile(qg.getPublicAudioId());
-//                need to fix
-//                if (qg.getImageUrl() != null) fileService.deleteFile(qg.getPublicImageId());
+                if (qg.getPublicAudioId()!= null) fileService.deleteFile(qg.getPublicAudioId());
+
+                if (qg.getPublicImageIds() != null) fileService.deleteFiles(qg.getPublicImageIds());
             }
         }catch (Exception ex){
             log.error(ex.getMessage());
@@ -431,7 +433,7 @@ public class ToeicServiceImplt implements ToeicService {
             List<MultipartFile> imageFiles,
             List<MultipartFile> audioFiles) {
 
-        log.info("🔄 [UPDATE TEST] id={}, testName={}", id, request.getName());
+        log.info("[UPDATE TEST] id={}, testName={}", id, request.getName());
 
         ToeicTest test = toeicTestRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Test not found"));
@@ -440,7 +442,7 @@ public class ToeicServiceImplt implements ToeicService {
         toeicTestRepository.save(test);
 
         // 1. Lấy danh sách các Group hiện tại trong DB
-        List<ToeicTestQuestionGroup> existingGroups = toeicTestQuestionGroupRepository.findByTestId(test.getId());
+        List<ToeicTestQuestionGroup> existingGroups = toeicTestQuestionGroupRepository.findByTestIdOrderByGroupOrderAsc(test.getId());
         Map<String, ToeicTestQuestionGroup> groupMap = new HashMap<>();
         existingGroups.forEach(g -> groupMap.put(g.getId(), g));
 
@@ -469,24 +471,33 @@ public class ToeicServiceImplt implements ToeicService {
             throw new RuntimeException("Upload failed during update", e);
         }
 
+        List<ToeicTestQuestionGroup> groupsToSave = new ArrayList<>();
+        List<String> deletedIds = new ArrayList<>();
         try {
-            List<ToeicTestQuestionGroup> groupsToSave = new ArrayList<>();
 
             for (ToeicTestQuestionGroupRequest qgReq : request.getQuestionGroups()) {
                 ToeicTestQuestionGroup group;
 
-                if (qgReq.getId() != null && groupMap.containsKey(qgReq.getId())) {
+                if (qgReq.getAction().equals(RequestType.UPDATE)) {
                     // --- TRƯỜNG HỢP UPDATE GROUP ---
                     group = groupMap.get(qgReq.getId());
-                    group.setPart(qgReq.getPart());
-
+                    toeicMapper.updateGroupQuestion(group,qgReq);
                     // Xử lý Image Group
-                    if (qgReq.getImageName() != null && !qgReq.getImageName().isEmpty()) {
-                        FileResponse fr = fileResponseMap.get(qgReq.getImageName());
-                        if (fr != null) {
-//                            if (group.getPublicImageId() != null) pidsToDelete.add(group.getPublicImageId());
-//                            group.setImageUrl(fr.getUrl());
-//                            group.setPublicImageId(fr.getPublicId());
+                    if (qgReq.getImageNames() != null && !qgReq.getImageNames().isEmpty()) {
+                        if(group.getImageUrls() == null){
+                            group.setImageUrls(new ArrayList<>());
+                        }else{
+                            pidsToDelete.addAll(group.getPublicImageIds());
+                            group.getImageUrls().clear();
+                        }
+
+                        for(String imgName: qgReq.getImageNames()){
+                            FileResponse fr = fileResponseMap.get(imgName);
+                            if(fr == null) throw new BadRequestException("Image name is not correct");
+
+                            group.getImageUrls().add(fr.getUrl());
+                            group.getPublicImageIds().add(fr.getPublicId());
+
                         }
                     }
 
@@ -500,28 +511,33 @@ public class ToeicServiceImplt implements ToeicService {
                         }
                     }
 
-                    // Xử lý danh sách câu hỏi trong group (Xóa cũ thêm mới để đơn giản hóa logic update questions)
-                    // Hoặc bạn có thể dùng Mapper để update từng câu nếu muốn tối ưu hơn.
                     group.getQuestions().clear();
                     List<ToeicTestQuestion> newQuestions = toeicMapper.toTestQuestions(qgReq.getQuestions());
                     for (var q : newQuestions) {
+                        q.setId(null);
                         q.setQuestionGroup(group);
                         group.getQuestions().add(q);
                     }
+                    groupsToSave.add(group);
 
-                } else {
+                } else if(qgReq.getAction().equals(RequestType.ADD)){
                     // --- TRƯỜNG HỢP THÊM GROUP MỚI ---
                     group = toeicMapper.toQuestionGroup(qgReq);
                     group.setTest(test);
+                    group.setId(null);
+                    if (qgReq.getImageNames() != null && !qgReq.getImageNames().isEmpty()) {
+                        for(String imgName: qgReq.getImageNames()){
+                            FileResponse fr = fileResponseMap.get(imgName);
+                            if(fr == null) throw new BadRequestException("Image name is not correct");
 
-                    if (qgReq.getImageName() != null && fileResponseMap.containsKey(qgReq.getImageName())) {
-                        FileResponse fr = fileResponseMap.get(qgReq.getImageName());
-//                        group.setImageUrl(fr.getUrl());
-//                        group.setPublicImageId(fr.getPublicId());
+                            group.getImageUrls().add(fr.getUrl());
+                            group.getPublicImageIds().add(fr.getPublicId());
+
+                        }
                     }
-
                     if (qgReq.getAudioName() != null && fileResponseMap.containsKey(qgReq.getAudioName())) {
                         FileResponse fr = fileResponseMap.get(qgReq.getAudioName());
+                        if(fr == null) throw new BadRequestException("Audio name is not correct");
                         group.setAudioUrl(fr.getUrl());
                         group.setPublicAudioId(fr.getPublicId());
                     }
@@ -530,26 +546,23 @@ public class ToeicServiceImplt implements ToeicService {
                     if(group.getQuestions() != null) {
                         group.getQuestions().forEach(q -> q.setQuestionGroup(group));
                     }
+                    groupsToSave.add(group);
                 }
-                groupsToSave.add(group);
-            }
-
-            // 3. Xử lý xóa các Group không còn trong request
-            List<String> requestGroupIds = request.getQuestionGroups().stream()
-                    .map(ToeicTestQuestionGroupRequest::getId)
-                    .filter(Objects::nonNull)
-                    .toList();
-
-            for (ToeicTestQuestionGroup existing : existingGroups) {
-                if (!requestGroupIds.contains(existing.getId())) {
-//                    if (existing.getPublicImageId() != null) pidsToDelete.add(existing.getPublicImageId());
-                    if (existing.getPublicAudioId() != null) pidsToDelete.add(existing.getPublicAudioId());
-                    toeicTestQuestionGroupRepository.delete(existing);
+                else{
+                    group = groupMap.get(qgReq.getId());
+                    deletedIds.add(qgReq.getId());
+                    if(group.getPublicImageIds()!=null){
+                        pidsToDelete.addAll(group.getPublicImageIds());
+                    }
+                    if(group.getPublicAudioId()!=null){
+                        pidsToDelete.add(group.getPublicAudioId());
+                    }
                 }
             }
 
             // 4. Lưu tất cả thay đổi
             toeicTestQuestionGroupRepository.saveAll(groupsToSave);
+            toeicTestQuestionGroupRepository.deleteAllById(deletedIds);
 
             // 5. Dọn dẹp file cũ trên Cloudinary/S3
             pidsToDelete.forEach(pid -> { try { fileService.deleteFile(pid); } catch (Exception ignore) {} });
@@ -562,7 +575,7 @@ public class ToeicServiceImplt implements ToeicService {
 
         // 6. Trả về response
         ToeicTestResponse response = toeicMapper.toTestResponse(test);
-        List<ToeicTestQuestionGroup> finalGroups = toeicTestQuestionGroupRepository.findByTestId(test.getId());
+        List<ToeicTestQuestionGroup> finalGroups = toeicTestQuestionGroupRepository.findByTestIdOrderByGroupOrderAsc(test.getId());
         response.setQuestionGroups(toeicMapper.toQuestionGroupResponses(finalGroups));
 
         return response;
