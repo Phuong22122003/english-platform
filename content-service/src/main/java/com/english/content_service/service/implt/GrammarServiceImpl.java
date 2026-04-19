@@ -13,7 +13,6 @@ import com.english.content_service.repository.GrammarRepository;
 import com.english.content_service.repository.GrammarTestQuestionRepository;
 import com.english.content_service.repository.GrammarTestRepository;
 import com.english.content_service.repository.GrammarTopicRepository;
-import com.english.content_service.service.AgentService;
 import com.english.content_service.service.TopicViewStatisticService;
 import com.english.dto.response.*;
 import com.english.enums.RequestType;
@@ -96,7 +95,7 @@ public class GrammarServiceImpl implements GrammarService {
         Page<GrammarTest> tests = grammarTestRepository.findByGrammarId(grammarId, PageRequest.of(page, size));
         List<GrammarTestResponse> testResponses = grammarMapper.toGrammarTestResponses(tests.getContent());
         GrammarResponse response = grammarMapper.toGrammarResponse(grammar);
-        response.setGrammarTests(new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements()));
+        response.setTests(new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements()));
         return  response;
     }
 
@@ -241,6 +240,12 @@ public class GrammarServiceImpl implements GrammarService {
         entityManager.clear();
         grammarTopicRepository.deleteById(topicId);
 //        agentService.deleteTopicFromVectorDB(topicId);
+    }
+
+    @Override
+    public GrammarResponse getGrammarById(String grammarId) {
+        Grammar grammar = grammarRepository.findById(grammarId).orElseThrow(()->new NotFoundException("Grammar not found"));
+        return grammarMapper.toGrammarResponse(grammar);
     }
 
 

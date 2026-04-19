@@ -66,6 +66,11 @@ public class GrammarController {
 
     // ========================= GRAMMAR =========================
 
+    @GetMapping("/topics/grammars/{grammar_id}")
+    public ResponseEntity<?> getGrammar(@PathVariable("grammar_id") String grammarId){
+        return ResponseEntity.ok(grammarService.getGrammarById(grammarId));
+    }
+
     @GetMapping("/topics/{topic_id}/grammars")
     public ResponseEntity<?> getGrammarsByTopicId(@PathVariable("topic_id") String topicId) {
         return ResponseEntity.ok(grammarService.getGrammarsByTopicId(topicId));

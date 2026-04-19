@@ -20,6 +20,7 @@ public interface GrammarService {
     GrammarTopicResponse updateTopic(String topicId, GrammarTopicRequest request, MultipartFile image);
     void deleteTopicById(String id);
     //grammar
+    GrammarResponse getGrammarById(String grammarId);
     GrammarTopicResponse getGrammarsByTopicId(String topicId);
     GrammarResponse addGrammar(String topicId, GrammarRequest request);
     GrammarResponse updateGrammar(String grammarId,GrammarRequest request);
