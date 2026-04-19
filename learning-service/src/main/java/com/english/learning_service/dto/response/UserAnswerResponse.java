@@ -17,7 +17,7 @@ public class UserAnswerResponse {
     private String question;
     private Options options;
     private String correctAnswer;
-    private String userAnswer;
+    private String selectedAnswer;
     private String explanation;
     private Integer order;
 }

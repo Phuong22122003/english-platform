@@ -21,5 +21,5 @@ public class GrammarResponse {
     private String createdAt;
     private String description;
     private Level level;
-    Page<GrammarTestResponse> grammarTests;
+    Page<GrammarTestResponse> tests;
 }

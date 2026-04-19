@@ -17,6 +17,7 @@ import java.util.List;
 public class VocabularyTestResponse {
     private String id;
     private String topicId;
+    private String topicName;
     private String name;
     private int duration;
     private String createdAt;

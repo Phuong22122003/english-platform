@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -23,5 +24,5 @@ public class VocabTopicResponse {
     private String createdAt;
     private Level level;
     List<VocabularyResponse> vocabularies;
-    List<VocabularyTestResponse> tests;
+    Page<VocabularyTestResponse> tests;
 }

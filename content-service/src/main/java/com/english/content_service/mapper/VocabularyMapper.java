@@ -47,6 +47,7 @@ public interface VocabularyMapper {
 
     //test
     @Mapping(target = "topicId", source = "topic.id")
+    @Mapping(target = "topicName", source = "topic.name")
     VocabularyTestResponse toVocabularyTestResponse(VocabularyTest test);
     List<VocabularyTestResponse> toVocabularyTestResponses(List<VocabularyTest> tests);
 

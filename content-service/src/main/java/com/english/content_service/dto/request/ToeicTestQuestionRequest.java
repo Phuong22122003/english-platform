@@ -12,5 +12,6 @@ public class ToeicTestQuestionRequest {
     private Options options;
     private String correctAnswer;
     private String explanation;
+    private Integer questionOrder;
     private RequestType action;
 }

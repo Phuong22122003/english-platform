@@ -12,8 +12,9 @@ import java.util.List;
 public class ToeicTestQuestionGroupRequest {
     private String id;
     private String passageText;
-    private String imageName;
+    private List<String> imageNames; // multiple image in 1 group question
     private String audioName;
+    private Integer groupOrder;
     private Integer part;
     private RequestType action;
     private List<ToeicTestQuestionRequest> questions;

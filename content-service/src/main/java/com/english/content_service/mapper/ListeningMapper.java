@@ -12,6 +12,7 @@ import com.english.content_service.entity.ListeningTest;
 import com.english.content_service.entity.ListeningTestQuestion;
 import com.english.content_service.entity.ListeningTopic;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;
@@ -25,6 +26,8 @@ public interface ListeningMapper {
     public ListeningTopic toTopicEntity(ListeningTopicRequest request);
     public void updateTopic(@MappingTarget  ListeningTopic topic,ListeningTopicRequest request);
     // listening
+    @Mapping(target = "topic", ignore = true)
+    public ListeningResponse toListeningResponse(Listening listening);
     public List<ListeningResponse> toListeningResponse(List<Listening> listeningList);
     public List<Listening> toListeningEntities(List<ListeningRequest> requests);
     public Listening toListeningEnty(ListeningRequest request);

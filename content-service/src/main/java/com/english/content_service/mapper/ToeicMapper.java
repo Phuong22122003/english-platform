@@ -10,10 +10,7 @@ import com.english.dto.response.ToeicTestGroupResponse;
 import com.english.dto.response.ToeicTestQuestionGroupResponse;
 import com.english.dto.response.ToeicTestQuestionResponse;
 import com.english.dto.response.ToeicTestResponse;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 import java.util.List;
 
@@ -38,6 +35,10 @@ public interface ToeicMapper {
     ToeicTestQuestionGroup toQuestionGroup(ToeicTestQuestionGroupRequest request);
 
     List<ToeicTestQuestionGroupResponse> toQuestionGroupResponses(List<ToeicTestQuestionGroup> requests);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "questions", source = "questions", ignore = true)
+    void updateGroupQuestion(@MappingTarget ToeicTestQuestionGroup target, ToeicTestQuestionGroupRequest request);
     // ============================== QUESTION ==========================
     ToeicTestQuestion toTestQuestion(ToeicTestQuestionRequest request);
 
