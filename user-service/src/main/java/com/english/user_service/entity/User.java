@@ -47,7 +47,7 @@ public class User {
     String fullname;
 
     @Column(name = "avartar_url")
-    String avartarUrl;
+    String avatarUrl;
 
     Integer target; // target eg 550
 

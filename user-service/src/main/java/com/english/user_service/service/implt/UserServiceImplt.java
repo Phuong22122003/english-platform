@@ -1,8 +1,12 @@
 package com.english.user_service.service.implt;
 
 import com.english.dto.response.FileResponse;
+import com.english.enums.RequestType;
 import com.english.exception.BadRequestException;
 import com.english.exception.NotFoundException;
+import com.english.exception.UnauthorizedException;
+import com.english.user_service.annotation.SyncUserStream;
+import com.english.user_service.enums.StreamAction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -28,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Random;
 
 @Slf4j
@@ -44,7 +49,14 @@ public class UserServiceImplt implements UserService {
 
 
     @Override
-    public void createUser(UserCreationRequest request) {
+    public List<UserResponse> getUserInfos(List<String> ids) {
+        List<User> users = userRepository.findAllById(ids);
+        return userMapper.toUserResponses(users);
+    }
+
+    @Override
+    @SyncUserStream(action = StreamAction.ADD)
+    public UserResponse createUser(UserCreationRequest request) {
         boolean isExist = userRepository.existsByUsername(request.getUsername());
         if (isExist) {
             throw new BadRequestException("Username is already taken");
@@ -60,7 +72,8 @@ public class UserServiceImplt implements UserService {
                 .fullname(request.getFullname())
                 .role(UserRole.USER)
                 .build();
-        userRepository.save(user);
+        user = userRepository.save(user);
+        return userMapper.toUserResponse(user);
     }
 
     @Override
@@ -71,6 +84,7 @@ public class UserServiceImplt implements UserService {
     }
 
     @Override
+    @SyncUserStream(action = StreamAction.UPDATE)
     public UserResponse updateUserProfile(UserProfileUpdateRequest request) {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
@@ -84,12 +98,11 @@ public class UserServiceImplt implements UserService {
 
     @Override
     @Transactional
-    public String updateAvatar(MultipartFile avatar) {
+    @SyncUserStream(action = StreamAction.UPDATE)
+    public UserResponse updateAvatar(MultipartFile avatar) {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
-        User user = userRepository.findById(userId).orElseThrow(() -> {
-            throw new NotFoundException("User not found");
-        });
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         String publicId = user.getPublicId();
         FileResponse fileResponse;
         if(publicId==null){
@@ -97,28 +110,23 @@ public class UserServiceImplt implements UserService {
         }else{
             fileResponse = fileService.uploadImage(avatar,publicId);
         }
-        user.setAvartarUrl(fileResponse.getUrl());
+        user.setAvatarUrl(fileResponse.getUrl());
         user.setPublicId(fileResponse.getPublicId());
         userRepository.save(user);
-        return fileResponse.getUrl();
+        return userMapper.toUserResponse(user);
     }
 
     @Override
     public UserResponse getUserById(String userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> {
-            throw new NotFoundException("User not found");
-        });
-        UserResponse response = userMapper.toUserResponse(user);
-        return response;
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        return userMapper.toUserResponse(user);
     }
 
     @Override
     public UserResponse getProfile() {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
-        User user = userRepository.findById(userId).orElseThrow(() -> {
-            throw new NotFoundException("User not found");
-        });
+        User user = userRepository.findById(userId).orElseThrow(() -> new UnauthorizedException("User not found"));
         return userMapper.toUserResponse(user);
     }
 }

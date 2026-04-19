@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
-    Integer target; // target study time per day (minutes)
-    Level level; // beginner, intermediate, advanced
-    LocalDateTime createdAt; 
+    String id;
+    String username;
+    String avatarUrl;
 }

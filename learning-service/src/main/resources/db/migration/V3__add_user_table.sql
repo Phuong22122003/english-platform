@@ -1,0 +1,7 @@
+CREATE TABLE "users" (
+     id varchar(36) PRIMARY KEY,
+     username VARCHAR(50) NOT NULL UNIQUE,
+     avatar_url TEXT,
+     updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

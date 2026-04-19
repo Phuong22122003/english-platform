@@ -13,6 +13,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -28,11 +30,16 @@ public class UserController {
         return ResponseEntity.ok().body("User deleted successfully");
     }
 
+    @PostMapping("/ids")
+    public ResponseEntity<List<UserResponse>> getUserInfos(@RequestBody  List<String> ids){
+        return ResponseEntity.ok().body(userService.getUserInfos(ids));
+    }
+
+
     @GetMapping("/profile")
     public ResponseEntity<UserResponse> getProfile(){
         return ResponseEntity.ok().body(userService.getProfile());
     }
-
     @PutMapping("/profile")
     public ResponseEntity<UserResponse> updateProfile(@RequestBody UserProfileUpdateRequest request) {
         return  ResponseEntity.ok().body(userService.updateUserProfile(request));
@@ -40,6 +47,6 @@ public class UserController {
 
     @PostMapping("/avatar")
     public ResponseEntity<String> uploadAvatar(@RequestPart MultipartFile avatar){
-        return ResponseEntity.ok().body(userService.updateAvatar(avatar));
+        return ResponseEntity.ok().body(userService.updateAvatar(avatar).getAvatarUrl());
     }
 }
