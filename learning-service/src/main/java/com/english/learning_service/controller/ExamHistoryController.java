@@ -2,6 +2,7 @@ package com.english.learning_service.controller;
 
 import com.english.learning_service.dto.request.ExamHistoryRequest;
 import com.english.learning_service.dto.response.ExamHistoryResponse;
+import com.english.learning_service.dto.response.RankingResponse;
 import com.english.learning_service.enums.FilterType;
 import com.english.learning_service.service.ExamHistoryService;
 import lombok.AccessLevel;
@@ -10,6 +11,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/exam/history")
@@ -35,5 +38,10 @@ public class ExamHistoryController {
     public ResponseEntity<ExamHistoryResponse> getExamHistoryDetail(@PathVariable("id") String examHistoryId) {
         ExamHistoryResponse response = examHistoryService.getExamHistoryDetail(examHistoryId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/toeic/{id}/rankings")
+    public ResponseEntity<List<RankingResponse>> getToeicRankings(@PathVariable(name = "id") String toeicId){
+        return ResponseEntity.ok(examHistoryService.getToeicRankings(toeicId));
     }
 }
