@@ -19,7 +19,9 @@ public class SecurityConfiguration {
             "/swagger-ui.html",
             "/authenticate/**",
             "/plan/agent-generation",
-            "/plan/callback"
+            "/plan/callback",
+            "/favorites/ids",
+            "/comments/tests/*/sse"
     };
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {

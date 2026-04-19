@@ -13,9 +13,11 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -41,9 +43,12 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/user-service/authenticate/password/otp",
             "/user-service/authenticate/password/otp/validation",
             "/user-service/authenticate/password/resets",
-            "/learning-service/plan/agent-generation"
+            "/learning-service/plan/agent-generation",
+            "/learning-service/favorites/ids",
+            "/content-service/**",
+            "/learning-service/comments/tests/**/sse"
     };
-
+    private AntPathMatcher pathMatcher = new AntPathMatcher();
     private IdentityService identityService;
 
     @Override
@@ -68,8 +73,27 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicEndPoint(ServerHttpRequest request) {
-        log.info(request.getURI().getPath());
-        return Arrays.stream(publicEndPoints).anyMatch(ep -> request.getURI().getPath().matches(API_PREFIX + ep));
+        String path = request.getURI().getPath();
+        HttpMethod method = request.getMethod();
+        if(path.contains("/comments/tests/") && path.contains("/sse") && method == HttpMethod.GET) return true;
+
+        return Arrays.stream(publicEndPoints).anyMatch(ep -> {
+            String fullPattern = API_PREFIX + ep;
+
+            // 1. Nếu là các endpoint login/signup thì cho qua mọi Method
+            if (ep.contains("/authenticate/")) {
+                return pathMatcher.match(fullPattern, path);
+            }
+
+            // 2. Nếu là vocabulary/grammar/listening, CHỈ cho qua nếu là GET
+            if (ep.contains("/content-service/")) {
+                return method == HttpMethod.GET && pathMatcher.match(fullPattern, path);
+            }
+
+
+            // 3. Mặc định các cái khác trong list public
+            return pathMatcher.match(fullPattern, path);
+        });
     }
 
     @Override

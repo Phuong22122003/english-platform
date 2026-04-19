@@ -3,6 +3,7 @@ package com.english.content_service.configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -18,14 +19,15 @@ public class SecurityConfiguration {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/authenticate/**",
-            "/vocabulary/topics/ids",
-            "/grammar/topics/ids",
-            "/listening/topics/ids"
+            "/vocabulary/**",
+            "/grammar/**",
+            "/listening/**",
+            "/toeic/groups/**"
     };
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests((request)->
-            request.requestMatchers(PUBLIC_URLS).permitAll()
+            request.requestMatchers(HttpMethod.GET,PUBLIC_URLS).permitAll()
                     .anyRequest().authenticated()
         )
         .oauth2ResourceServer(oauth2 -> oauth2
