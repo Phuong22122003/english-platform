@@ -11,4 +11,5 @@ import java.util.List;
 public interface FavoriteRepository extends JpaRepository<Favorite, String> {
     public List<Favorite> findByUserIdAndItemType(String userId, ItemTypeEnum testType);
     public List<Favorite> findByUserId(String userId);
+    public Favorite findByUserIdAndItemId(String userId, String itemId);
 }

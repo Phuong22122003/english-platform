@@ -41,13 +41,24 @@ public class FavoriteServiceImplt implements FavoriteService {
     VocabularyClient vocabularyClient;
     @Override
     public FavoriteResponse addFavorite(FavoriteRequest request) {
-        Favorite favorite = favoriteMapper.toFavorite(request);
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
-        favorite.setUserId(userId);
-        favorite.setAddedAt(LocalDateTime.now());
-        favorite = favoriteRepository.save(favorite);
-        return favoriteMapper.toFavoriteResponse(favorite);
+        Favorite favorite = favoriteRepository.findByUserIdAndItemId(userId,request.getItemId());
+        if(favorite == null) {
+            favorite = favoriteMapper.toFavorite(request);
+            favorite.setUserId(userId);
+            favorite.setAddedAt(LocalDateTime.now());
+            favorite = favoriteRepository.save(favorite);
+        }
+        FavoriteResponse res =  favoriteMapper.toFavoriteResponse(favorite);
+        if(res.getItemType().equals(ItemTypeEnum.VOCABULARY)){
+            res.setVocabTopic(VocabTopicResponse.builder().id(favorite.getItemId()).build());
+        }else if(res.getItemType().equals(ItemTypeEnum.GRAMMAR)){
+            res.setGrammarTopic(GrammarTopicResponse.builder().id(favorite.getItemId()).build());
+        } else if(res.getItemType().equals(ItemTypeEnum.LISTENING)){
+            res.setListeningTopic(ListeningTopicResponse.builder().id(favorite.getItemId()).build());
+        }
+        return res;
     }
 
     @Override
