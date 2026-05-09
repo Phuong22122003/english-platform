@@ -24,8 +24,10 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.KafkaClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +46,8 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
     private UserAnswerGroupRepository userAnswerGroupRepository;
     private ToeicClient toeicClient;
     private UserClient userClient;
-
+    private KafkaTemplate<String, Object> kafkaTemplate;
+    private String TOPIC_NAME = "total_completion";
     @Override
     public List<RankingResponse> getToeicRankings(String toeicId) {
         List<RankingProjection> rankingProjections = examHistoryRepository.findToeicScoreRanking(toeicId);
@@ -85,8 +88,10 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
             }
         }
         userAnswerGroupRepository.saveAllAndFlush(answerGroups);
-        if(request.getTestType().equals(ItemTypeEnum.FULL_TEST))
-            toeicClient.updateTotalCompletion(request.getTestId());
+        if(request.getTestType().equals(ItemTypeEnum.FULL_TEST)){
+            kafkaTemplate.send(TOPIC_NAME,request.getTestId());
+//            toeicClient.updateTotalCompletion(request.getTestId());
+        }
         return examHistoryMapper.toExamHistoryResponse(examHistory);
     }
 

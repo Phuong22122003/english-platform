@@ -13,6 +13,8 @@ public interface ToeicClient {
     public List<ToeicTestResponse> getTestsByIds(@RequestParam(name = "ids") List<String> ids);
     @GetMapping("/tests/{test_id}")
     public ToeicTestResponse getTestDetail(@PathVariable("test_id") String testId);
+
+    @Deprecated
     @PutMapping("/tests/{test_id}")
     public ResponseEntity<String> updateTotalCompletion(@PathVariable("test_id") String testId);
 }

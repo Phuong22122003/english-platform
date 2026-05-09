@@ -32,6 +32,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -113,6 +114,7 @@ public class ToeicServiceImplt implements ToeicService {
     }
 
     @Override
+    @KafkaListener(topics="total_completion")
     public void updateTotalComplete(String testId) {
         ToeicTest test = toeicTestRepository.findById(testId).orElseThrow(()->new NotFoundException("Test not found"));
         test.setTotalCompletion(test.getTotalCompletion()+1);
