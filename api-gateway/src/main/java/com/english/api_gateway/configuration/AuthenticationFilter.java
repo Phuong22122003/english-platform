@@ -80,18 +80,15 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         return Arrays.stream(publicEndPoints).anyMatch(ep -> {
             String fullPattern = API_PREFIX + ep;
 
-            // 1. Nếu là các endpoint login/signup thì cho qua mọi Method
             if (ep.contains("/authenticate/")) {
                 return pathMatcher.match(fullPattern, path);
             }
 
-            // 2. Nếu là vocabulary/grammar/listening, CHỈ cho qua nếu là GET
             if (ep.contains("/content-service/")) {
                 return method == HttpMethod.GET && pathMatcher.match(fullPattern, path);
             }
 
 
-            // 3. Mặc định các cái khác trong list public
             return pathMatcher.match(fullPattern, path);
         });
     }

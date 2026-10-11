@@ -78,6 +78,11 @@ public class VocabularyController {
 
     // ========================= VOCABULARY =========================
 
+    @GetMapping("/lookup")
+    public ResponseEntity<List<VocabularyResponse>> lookup(@RequestParam(name = "word") String word){
+        return ResponseEntity.ok(vocabularyService.lookup(word));
+    }
+
     @GetMapping("/topics/{topic_id}/vocabularies")
     public ResponseEntity<?> getVocabulariesByTopic(@PathVariable("topic_id") String topicId) {
         return ResponseEntity.ok(vocabularyService.getVocabulariesByTopicId(topicId));

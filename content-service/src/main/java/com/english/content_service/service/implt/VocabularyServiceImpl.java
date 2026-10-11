@@ -527,6 +527,12 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
 
     @Override
+    public List<VocabularyResponse> lookup(String key) {
+        List<Vocabulary> vocabularies = vocabularyRepository.lookup(key);
+        return vocabularyMapper.toVocabularyResponses(vocabularies);
+    }
+
+    @Override
     @Transactional
     public VocabularyTestResponse addTest(String topicId, VocabularyTestRequest vocabularyTestRequest, List<MultipartFile> imageFiles) {
         VocabularyTopic topic = vocabularyTopicRepository.findById(topicId).orElseThrow(()-> new RuntimeException("Topic not found"));

@@ -26,7 +26,7 @@ public interface VocabularyService {
     public List<VocabularyResponse> updateVocabularies(String topicId, List<VocabularyRequest> requests, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
     public VocabularyResponse updateVocabulary(String vocabId, VocabularyRequest request, MultipartFile imageFile, MultipartFile audioFile);
     public void deleteVocabulary(String vocabId);
-
+    public List<VocabularyResponse> lookup(String key);
     //test
     public VocabTopicResponse getTestsByTopicId(String topicId, int page, int size);
     public VocabularyTestResponse getTestQuestionsByTestId(String testId);
